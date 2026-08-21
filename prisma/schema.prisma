@@ -1,0 +1,62 @@
+// Velora Living — data model
+//
+// Postgres, for both production and local development.
+//
+// This started on SQLite locally, which is why the models avoid anything
+// Postgres-specific (no enums, no arrays, no native types) — but SQLite cannot be
+// used on Vercel: the filesystem there is read-only and discarded between
+// invocations, so every write would fail. Running the same engine in both places
+// also removes a whole class of "worked locally, broke in production" bugs.
+//
+// Prisma requires a literal here — `provider = env(...)` is rejected at validation —
+// so switching engines means editing this one line. To go back to SQLite for local
+// work: set provider to "sqlite", DATABASE_URL to "file:./dev.db", and run
+// `npm run db:push`. Don't commit it that way.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// A customer enquiry, submitted from the contact section or a rug-specific CTA.
+model Enquiry {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  message   String
+  /// Rug code the enquiry was raised against, e.g. "VLR-119". Null for general enquiries.
+  rugCode   String?
+  /// Denormalised rug name captured at submit time, so the record stays readable
+  /// even if the catalogue entry is later renamed or removed.
+  rugName   String?
+  /// Best-effort client IP, used only for rate limiting and abuse triage.
+  ip        String?
+  userAgent String?
+  /// Set true once the owner has followed up. Toggled from /admin.
+  handled   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([email])
+}
+
+/// A newsletter subscriber. Email is unique — re-subscribing updates the existing row
+/// rather than creating a duplicate.
+model Subscriber {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  ip           String?
+  /// Null until the welcome email is dispatched successfully.
+  welcomedAt   DateTime?
+  /// Set when the subscriber opts out; kept rather than deleted for suppression.
+  unsubscribed Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([createdAt])
+}

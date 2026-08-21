@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Diagram of hand tufting: loops of yarn punched through a backing cloth">
+  <rect width="200" height="200" fill="#EAE1CE"/>
+
+  <!-- Pile loops, punched through the backing and standing proud of it.
+       Rows recede with lower opacity to suggest depth across the rug. -->
+  <g fill="none" stroke="#B08A3E" stroke-linecap="round">
+    <g opacity="0.28" stroke-width="2.4">
+      <path d="M28 74c0-9 7-16 15-16s15 7 15 16"/>
+      <path d="M64 74c0-9 7-16 15-16s15 7 15 16"/>
+      <path d="M100 74c0-9 7-16 15-16s15 7 15 16"/>
+      <path d="M136 74c0-9 7-16 15-16s15 7 15 16"/>
+    </g>
+    <g opacity="0.5" stroke-width="2.8">
+      <path d="M20 104c0-11 8-19 18-19s18 8 18 19"/>
+      <path d="M62 104c0-11 8-19 18-19s18 8 18 19"/>
+      <path d="M104 104c0-11 8-19 18-19s18 8 18 19"/>
+      <path d="M146 104c0-11 8-19 18-19s18 8 18 19"/>
+    </g>
+    <g opacity="0.95" stroke-width="3.4">
+      <path d="M14 140c0-13 9-23 21-23s21 10 21 23"/>
+      <path d="M62 140c0-13 9-23 21-23s21 10 21 23"/>
+      <path d="M110 140c0-13 9-23 21-23s21 10 21 23"/>
+      <path d="M158 140c0-13 9-23 21-23s21 10 21 23"/>
+    </g>
+  </g>
+
+  <!-- The primary backing the tufting gun drives the yarn through. -->
+  <line x1="0" y1="140" x2="200" y2="140" stroke="#1A1815" stroke-width="2.6"/>
+  <line x1="0" y1="152" x2="200" y2="152" stroke="#1A1815" stroke-width="1" opacity="0.35"/>
+
+  <!-- Yarn tails below the backing, trimmed and latexed in finishing. -->
+  <g stroke="#1A1815" stroke-width="1.6" opacity="0.3" stroke-linecap="round">
+    <path d="M35 152v10"/><path d="M56 152v8"/><path d="M83 152v10"/>
+    <path d="M104 152v8"/><path d="M131 152v10"/><path d="M152 152v8"/><path d="M179 152v10"/>
+  </g>
+</svg>

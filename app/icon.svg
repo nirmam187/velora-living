@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Velora Living">
+  <!-- Vector reading of the Velora Living monogram: the gold arc, the gold V and
+       the ink L. Used at small sizes where the full lockup is unreadable. -->
+  <rect width="64" height="64" rx="8" fill="#F5F0E6"/>
+  <circle cx="37" cy="31" r="19" fill="none" stroke="#B08A3E" stroke-width="2.2"/>
+  <path d="M13 15 L24 46" fill="none" stroke="#B08A3E" stroke-width="7" stroke-linecap="butt"/>
+  <path d="M24 46 L34 15" fill="none" stroke="#B08A3E" stroke-width="3.4" stroke-linecap="butt"/>
+  <path d="M33 13 L33 47 L52 47" fill="none" stroke="#1A1815" stroke-width="6" stroke-linecap="butt" stroke-linejoin="miter"/>
+</svg>
