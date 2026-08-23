@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRugViewer } from './RugViewerContext'
 import { useEnquiry } from './EnquiryContext'
 import { collections } from '@/data/products'
@@ -22,6 +22,24 @@ export default function RugModal() {
   const returnFocusRef = useRef<HTMLElement | null>(null)
 
   const isOpen = current !== null
+
+  // Every photograph of this rug: the catalogue shot first, then room shots.
+  const views = useMemo(() => {
+    if (!current) return []
+    return [
+      { src: current.image, alt: current.alt },
+      ...(current.styled ?? []).map((photo) => ({ src: photo.src, alt: photo.alt })),
+    ]
+  }, [current])
+
+  const [viewIndex, setViewIndex] = useState(0)
+
+  // Paging to another rug must start again on its catalogue shot.
+  useEffect(() => {
+    setViewIndex(0)
+  }, [current?.code])
+
+  const view = views[viewIndex] ?? views[0]
 
   // Remember what to give focus back to, and move focus into the dialog.
   useEffect(() => {
@@ -136,14 +154,37 @@ export default function RugModal() {
         </button>
 
         <div className="rm-visual">
-          <Image
-            key={current.image}
-            src={current.image}
-            alt={current.alt}
-            fill
-            sizes="(max-width: 860px) 100vw, 46vw"
-            priority
-          />
+          {view && (
+            <Image
+              key={view.src}
+              src={view.src}
+              alt={view.alt}
+              fill
+              sizes="(max-width: 860px) 100vw, 46vw"
+              priority
+            />
+          )}
+
+          {views.length > 1 && (
+            <div className="rm-thumbs">
+              {views.map((photo, index) => (
+                <button
+                  type="button"
+                  key={photo.src}
+                  className={`rm-thumb${index === viewIndex ? ' is-active' : ''}`}
+                  onClick={() => setViewIndex(index)}
+                  aria-label={
+                    index === 0
+                      ? `Show ${current.name} on its own`
+                      : `Show ${current.name} in a room, photo ${index} of ${views.length - 1}`
+                  }
+                  aria-pressed={index === viewIndex}
+                >
+                  <Image src={photo.src} alt="" fill sizes="64px" loading="lazy" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="rm-body">

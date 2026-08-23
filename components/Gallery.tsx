@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Reveal from './Reveal'
-import { galleryProducts } from '@/data/products'
+import { galleryImageFor, galleryProducts } from '@/data/products'
 import { site } from '@/lib/site'
 import { useRugViewer } from './RugViewerContext'
 
@@ -33,23 +33,26 @@ export default function Gallery() {
       </Reveal>
 
       <Reveal className="gallery-strip">
-        {shown.map((product) => (
-          <button
-            type="button"
-            className="g-item"
-            key={product.code}
-            onClick={() => open(product.code, codes)}
-            aria-label={`View ${product.name}, ${product.code}`}
-          >
-            <Image
-              src={product.image}
-              alt={product.galleryAlt ?? product.alt}
-              fill
-              sizes="(max-width: 980px) 33vw, 17vw"
-              loading="lazy"
-            />
-          </button>
-        ))}
+        {shown.map((product) => {
+          const photo = galleryImageFor(product)
+          return (
+            <button
+              type="button"
+              className="g-item"
+              key={product.code}
+              onClick={() => open(product.code, codes)}
+              aria-label={`View ${product.name}, ${product.code}`}
+            >
+              <Image
+                src={photo.src}
+                alt={photo.alt}
+                fill
+                sizes="(max-width: 980px) 33vw, 17vw"
+                loading="lazy"
+              />
+            </button>
+          )
+        })}
       </Reveal>
     </section>
   )

@@ -20,6 +20,15 @@ export type Material =
   | 'Blended Wool'
   | 'Silk Blend'
 
+/** An extra photograph of the rug in a room, shown in the rug viewer. */
+export interface StyledPhoto {
+  /** Path under /public. */
+  src: string
+  alt: string
+  width: number
+  height: number
+}
+
 export interface Product {
   /** Catalogue code shown above the rug name, e.g. "VLR-119". Must be unique. */
   code: string
@@ -41,6 +50,11 @@ export interface Product {
   detailAlt?: string
   detailWidth?: number
   detailHeight?: number
+  /**
+   * Extra room photographs. The rug viewer shows these as a thumbnail strip
+   * beneath the main image, so a rug can be seen in situ as well as flat.
+   */
+  styled?: StyledPhoto[]
   /** Longer copy, used by the spotlight section when this rug is featured. */
   story?: string[]
   /** Set true to include the rug in the "In the Wild" gallery strip. */
@@ -142,6 +156,56 @@ export const products: Product[] = [
     height: 595,
   },
 
+  {
+    code: 'VLR-121',
+    name: 'Afreen',
+    collection: 'classic',
+    description:
+      'A Persian floral field on soft sky blue, framed by a hand-drawn camel border.',
+    materials: ['New Zealand Wool'],
+    weave: 'Hand Tufted',
+    image: '/images/rugs/vlr-121-afreen.jpg',
+    alt: 'Afreen rug, blue Persian floral field with a camel and ivory border',
+    width: 823,
+    height: 1400,
+    styled: [
+      {
+        src: '/images/rugs/vlr-121-afreen-styled-1.jpg',
+        alt: 'Afreen rug beneath a carved coffee table in a panelled sitting room with a tan leather chesterfield',
+        width: 1400,
+        height: 933,
+      },
+      {
+        src: '/images/rugs/vlr-121-afreen-styled-2.jpg',
+        alt: 'Afreen rug in a sunlit living room with a leather sofa and a navy velvet armchair',
+        width: 1400,
+        height: 933,
+      },
+    ],
+    inGallery: true,
+    galleryAlt: 'Afreen rug styled in a classic living room',
+  },
+  {
+    code: 'VLR-125',
+    name: 'Gul',
+    collection: 'classic',
+    description:
+      'Oversized roses drawn tone on tone in dusty rose and blush — floral, but quietly so.',
+    materials: ['Blended Wool', 'Silk Blend'],
+    weave: 'Hand Tufted',
+    image: '/images/rugs/vlr-125-gul.jpg',
+    alt: 'Gul rug, blush roses on a dusty rose ground',
+    width: 959,
+    height: 1400,
+    styled: [
+      {
+        src: '/images/rugs/vlr-125-gul-styled-1.jpg',
+        alt: 'Gul rug anchoring a cream sectional and round oak table in a light-filled living room',
+        width: 1400,
+        height: 1050,
+      },
+    ],
+  },
   // ----------------------------------------------------------------- modern
   {
     code: 'VLR-119',
@@ -288,6 +352,181 @@ export const products: Product[] = [
     inGallery: true,
     galleryAlt: 'Marble swirl rug styled in an interior',
   },
+  {
+    code: 'VLR-122',
+    name: 'Candy',
+    collection: 'modern',
+    description:
+      'Ribboned waves of clay, indigo and ivory that ripple right across the floor.',
+    materials: ['New Zealand Wool'],
+    weave: 'Hand Tufted',
+    image: '/images/rugs/vlr-122-candy.jpg',
+    alt: 'Candy rug, rippling waves of clay pink, blue and ivory',
+    width: 986,
+    height: 1400,
+    styled: [
+      {
+        src: '/images/rugs/vlr-122-candy-styled-1.jpg',
+        alt: 'Candy rug under a curved bouclé sofa in a bright, arched-window living room',
+        width: 1400,
+        height: 933,
+      },
+      {
+        src: '/images/rugs/vlr-122-candy-styled-2.jpg',
+        alt: 'Candy rug running the length of a calm neutral bedroom',
+        width: 1400,
+        height: 1072,
+      },
+      {
+        src: '/images/rugs/vlr-122-candy-styled-3.jpg',
+        alt: 'Candy rug in a warm, lamp-lit room with a navy velvet sofa',
+        width: 1400,
+        height: 1120,
+      },
+    ],
+    inGallery: true,
+    galleryAlt: 'Candy rug styled in a modern living room',
+  },
+  {
+    code: 'VLR-123',
+    name: 'Coastal',
+    collection: 'modern',
+    description:
+      'A weathered shoreline in wool — turquoise water breaking against charcoal and sand.',
+    materials: ['Blended Wool', 'Silk Blend'],
+    weave: 'Hand Tufted',
+    image: '/images/rugs/vlr-123-coastal.jpg',
+    alt: 'Coastal rug, turquoise abstract shoreline against charcoal and sand',
+    width: 949,
+    height: 1400,
+    styled: [
+      {
+        src: '/images/rugs/vlr-123-coastal-styled-1.jpg',
+        alt: 'Coastal rug in a concrete-floored living room with a charcoal sofa and teal armchair',
+        width: 1400,
+        height: 933,
+      },
+      {
+        src: '/images/rugs/vlr-123-coastal-styled-2.jpg',
+        alt: 'Coastal rug beside a low platform bed in a soft grey bedroom',
+        width: 1400,
+        height: 933,
+      },
+      {
+        src: '/images/rugs/vlr-123-coastal-styled-3.jpg',
+        alt: 'Close view of the Coastal rug pile, turquoise dissolving into stone grey',
+        width: 1400,
+        height: 1400,
+      },
+    ],
+    inGallery: true,
+    galleryAlt: 'Coastal rug styled in a modern interior',
+  },
+  {
+    code: 'VLR-124',
+    name: 'Garden Whispers',
+    collection: 'modern',
+    description:
+      'Big graphic blooms in teal, sage and olive, carved into an ivory ground.',
+    materials: ['New Zealand Wool'],
+    weave: 'Hand Tufted',
+    image: '/images/rugs/vlr-124-garden-whispers.jpg',
+    alt: 'Garden Whispers rug, bold teal and olive blooms on ivory',
+    width: 980,
+    height: 1400,
+    styled: [
+      {
+        src: '/images/rugs/vlr-124-garden-whispers-styled-1.jpg',
+        alt: 'Garden Whispers rug under a round oak table in a sunlit living room',
+        width: 1400,
+        height: 933,
+      },
+      {
+        src: '/images/rugs/vlr-124-garden-whispers-styled-2.jpg',
+        alt: 'Garden Whispers rug beside a linen-dressed bed in a bright bedroom',
+        width: 1400,
+        height: 933,
+      },
+      {
+        src: '/images/rugs/vlr-124-garden-whispers-styled-3.jpg',
+        alt: 'Close view of the Garden Whispers pile, showing the carved outline around each bloom',
+        width: 1400,
+        height: 1400,
+      },
+    ],
+    inGallery: true,
+    galleryAlt: 'Garden Whispers rug styled in an interior',
+  },
+  {
+    code: 'VLR-126',
+    name: 'Jazz',
+    collection: 'modern',
+    description:
+      'Retro arcs in rust, olive, ochre and navy, looping across a cream ground.',
+    materials: ['New Zealand Wool'],
+    weave: 'Hand Tufted',
+    image: '/images/rugs/vlr-126-jazz.jpg',
+    alt: 'Jazz rug, retro rust, olive and navy arcs on cream',
+    width: 957,
+    height: 1400,
+    styled: [
+      {
+        src: '/images/rugs/vlr-126-jazz-styled-1.jpg',
+        alt: 'Jazz rug under a bouclé sectional and walnut coffee table',
+        width: 1400,
+        height: 1050,
+      },
+      {
+        src: '/images/rugs/vlr-126-jazz-styled-2.jpg',
+        alt: 'Jazz rug beneath a round dining table in an olive-walled dining room',
+        width: 1400,
+        height: 933,
+      },
+      {
+        src: '/images/rugs/vlr-126-jazz-styled-3.jpg',
+        alt: 'Jazz rug as a hallway runner beside a walnut console',
+        width: 1400,
+        height: 1400,
+      },
+      {
+        src: '/images/rugs/vlr-126-jazz-styled-4.jpg',
+        alt: 'Close view of the Jazz rug pile, showing the banded arcs in cut wool',
+        width: 1400,
+        height: 1400,
+      },
+    ],
+    inGallery: true,
+    galleryAlt: 'Jazz rug styled in an interior',
+  },
+  {
+    code: 'VLR-127',
+    name: 'Magnolia',
+    collection: 'modern',
+    description:
+      'Colour blocked in blush, sage and cobalt — a quiet grid with a painterly hand.',
+    materials: ['New Zealand Wool'],
+    weave: 'Hand Tufted',
+    image: '/images/rugs/vlr-127-magnolia.jpg',
+    alt: 'Magnolia rug, blocks of blush, sage, cobalt and grey on ivory',
+    width: 955,
+    height: 1400,
+    styled: [
+      {
+        src: '/images/rugs/vlr-127-magnolia-styled-1.jpg',
+        alt: 'Magnolia rug under a cream sofa and round table in a sunlit living room',
+        width: 1400,
+        height: 933,
+      },
+      {
+        src: '/images/rugs/vlr-127-magnolia-styled-2.jpg',
+        alt: 'Close view of the Magnolia rug, sunlight falling across the colour blocks',
+        width: 1400,
+        height: 1400,
+      },
+    ],
+    inGallery: true,
+    galleryAlt: 'Magnolia rug styled in an interior',
+  },
 ]
 
 /** The rug featured in the spotlight section. Change this to feature another. */
@@ -311,12 +550,30 @@ export function productByCode(code: string): Product | undefined {
 /** The gallery strip, in the order the original site showed it. */
 export const galleryOrder = [
   'VLR-9',
+  'VLR-124',
   'VLR-117',
+  'VLR-122',
   'VLR-02',
+  'VLR-126',
   'VLR-118',
+  'VLR-121',
   'VLR-115',
+  'VLR-123',
   'VLR-10',
+  'VLR-127',
 ] as const
+
+/**
+ * The photograph the gallery strip shows. "In the Wild" is about rooms, so a
+ * rug with room photography leads with one; the rest fall back to the catalogue
+ * shot.
+ */
+export function galleryImageFor(product: Product): { src: string; alt: string } {
+  const styled = product.styled?.[0]
+  const src = styled?.src ?? product.image
+  const alt = product.galleryAlt ?? styled?.alt ?? product.alt
+  return { src, alt }
+}
 
 export function galleryProducts(): Product[] {
   return galleryOrder
