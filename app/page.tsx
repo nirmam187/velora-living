@@ -4,6 +4,7 @@ import ThreadDivider from '@/components/ThreadDivider'
 import Marquee from '@/components/Marquee'
 import Collections from '@/components/Collections'
 import Spotlight from '@/components/Spotlight'
+import FullRange from '@/components/FullRange'
 import Origin from '@/components/Origin'
 import Craft from '@/components/Craft'
 import Promise from '@/components/Promise'
@@ -40,6 +41,7 @@ export default function HomePage() {
         <Marquee />
         <Collections />
         <Spotlight />
+        <FullRange />
         <Origin />
         <Craft />
         <Promise />

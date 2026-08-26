@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { products } from '@/data/products'
+import { catalogue } from '@/data/catalogue'
 
 /**
  * Shared between the browser and the route handlers, so the two can never drift.
@@ -7,7 +8,11 @@ import { products } from '@/data/products'
  * can be bypassed entirely.
  */
 
-const validCodes = products.map((p) => p.code)
+/** Both lists: a visitor can enquire about a curated rug or a catalogue one. */
+const validCodes = [
+  ...products.map((p) => p.code),
+  ...catalogue.map((r) => r.code),
+]
 
 /** Collapses whitespace and trims — users paste all sorts of things into forms. */
 const tidy = (v: unknown) =>

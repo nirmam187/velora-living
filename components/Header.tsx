@@ -6,6 +6,7 @@ import { useEnquiry } from './EnquiryContext'
 
 const NAV_LINKS = [
   { href: '#collections', label: 'Collections' },
+  { href: '#full-range', label: 'Full Range' },
   { href: '#craft', label: 'Craftsmanship' },
   { href: '#origin', label: 'Our Story' },
   { href: '#gallery', label: 'Gallery' },

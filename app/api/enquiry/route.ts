@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { enquirySchema, fieldErrors } from '@/lib/validation'
-import { productByCode } from '@/data/products'
+import { rugByCode } from '@/data/catalogue'
 import { sendMail, ownerAddress } from '@/lib/email'
 import { ownerNotification, customerAutoReply } from '@/lib/email-templates'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, id: null })
   }
 
-  const rug = data.rugCode ? productByCode(data.rugCode) : undefined
+  const rug = data.rugCode ? rugByCode(data.rugCode) : undefined
 
   try {
     const enquiry = await prisma.enquiry.create({
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
         phone: data.phone || null,
         message: data.message,
         rugCode: rug?.code ?? null,
-        rugName: rug?.name ?? null,
+        rugName: rug?.label ?? null,
         ip,
         userAgent: request.headers.get('user-agent')?.slice(0, 400) ?? null,
       },

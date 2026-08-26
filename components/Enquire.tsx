@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useRef, useState, type FormEvent } from 'react'
 import Reveal from './Reveal'
 import { collections, productByCode, productsIn } from '@/data/products'
+import { catalogueLabel, catalogueStyles, catalogueIn, rugByCode } from '@/data/catalogue'
 import { useEnquiry } from './EnquiryContext'
 import { site } from '@/lib/site'
 
@@ -28,7 +29,7 @@ export default function Enquire() {
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
   const statusRef = useRef<HTMLDivElement>(null)
 
-  const selected = rugCode ? productByCode(rugCode) : undefined
+  const selected = rugCode ? rugByCode(rugCode) : undefined
   const sending = status.kind === 'sending'
 
   /** Mirrors lib/validation.ts. The server re-checks all of this regardless. */
@@ -106,7 +107,8 @@ export default function Enquire() {
     setStatus({ kind: 'idle' })
   }
 
-  const visual = selected ?? productByCode('VLR-119')!
+  const fallback = productByCode('VLR-119')!
+  const visual = selected ?? { image: fallback.image, alt: fallback.alt }
 
   return (
     <section className="enquire" id="enquire">
@@ -133,7 +135,7 @@ export default function Enquire() {
                 loading="lazy"
               />
               <figcaption>
-                {selected ? `${selected.name} · ${selected.code}` : 'Made to order'}
+                {selected ? `${selected.label} · ${selected.code}` : 'Made to order'}
               </figcaption>
             </figure>
             <div className="enq-aside">
@@ -254,6 +256,18 @@ export default function Enquire() {
                         {productsIn(collection.id).map((product) => (
                           <option key={product.code} value={product.code}>
                             {product.name} · {product.code}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                    {catalogueStyles.map((style) => (
+                      <optgroup
+                        key={style.id}
+                        label={`Full Range — ${style.label}`}
+                      >
+                        {catalogueIn(style.id).map((rug) => (
+                          <option key={rug.code} value={rug.code}>
+                            {catalogueLabel(rug)} · {rug.code}
                           </option>
                         ))}
                       </optgroup>
