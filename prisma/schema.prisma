@@ -37,12 +37,29 @@ model Enquiry {
   /// Best-effort client IP, used only for rate limiting and abuse triage.
   ip        String?
   userAgent String?
+
+  /// ---- Campaign attribution -------------------------------------------------
+  /// Captured from the URL on the visitor's FIRST page of the session and carried
+  /// through to submit, so an enquiry can be traced back to the ad that produced
+  /// it. All null for organic visits. See lib/utm.ts.
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmContent  String?
+  utmTerm     String?
+  /// Meta's click identifier. Present on every click-through from a Meta ad.
+  fbclid      String?
+  /// Where the session came from, and which page it landed on.
+  referrer    String?
+  landingPage String?
   /// Set true once the owner has followed up. Toggled from /admin.
   handled   Boolean  @default(false)
   createdAt DateTime @default(now())
 
   @@index([createdAt])
   @@index([email])
+  /// Lets /admin group leads by campaign without a table scan.
+  @@index([utmCampaign])
 }
 
 /// A newsletter subscriber. Email is unique — re-subscribing updates the existing row

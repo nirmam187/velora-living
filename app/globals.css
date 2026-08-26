@@ -658,3 +658,170 @@ footer{ background:var(--ink); color:var(--cream); padding:80px 0 30px;}
 @media (prefers-reduced-motion: reduce){
   .fr-shot img, .fr-zoom, .fr-tabs button{ transition:none; }
 }
+
+/* ---------------------------------------------------------------------------
+   WHATSAPP CALLS TO ACTION
+   The primary conversion path for Meta ad traffic. Styled in the brand's gold
+   and ink rather than WhatsApp green: the glyph is recognisable on its own, and
+   green would be the loudest thing on a page built from cream and wool tones.
+   --------------------------------------------------------------------------- */
+
+/* Overrides .cta-btn's inline-block so the glyph and the label sit on one
+   baseline. Declared after .cta-btn, so it wins without needing !important. */
+.wa-btn{ display:inline-flex; align-items:center; justify-content:center; gap:9px; }
+.wa-btn svg{ flex:0 0 auto; }
+
+.wa-float{
+  position:fixed; right:clamp(16px, 3vw, 34px); bottom:clamp(16px, 3vw, 34px);
+  z-index:130;
+  display:flex; align-items:center; justify-content:center;
+  height:56px; min-width:56px; padding:0 14px;
+  border-radius:999px; border:1px solid var(--gold);
+  background:var(--ink); color:var(--gold-light);
+  box-shadow:0 6px 22px rgba(26,24,21,0.22);
+  transition:background 0.25s ease, color 0.25s ease;
+}
+.wa-float:hover{ background:var(--gold); color:var(--ink); }
+
+/* The label is collapsed to nothing by default and widens on hover. On a phone
+   it never opens — screen width is the scarcest thing on the page there, and the
+   glyph alone is unambiguous. It stays in the DOM so screen readers still read a
+   labelled control rather than a bare icon. */
+.wa-float-label{
+  max-width:0; margin-left:0; overflow:hidden; white-space:nowrap;
+  font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase;
+  transition:max-width 0.3s ease, margin-left 0.3s ease;
+}
+@media (hover: hover) and (pointer: fine){
+  .wa-float:hover .wa-float-label,
+  .wa-float:focus-visible .wa-float-label{ max-width:150px; margin-left:10px; }
+}
+
+/* The chat button owns the corner now, so the scroll-to-top control moves above
+   it — 56px of button plus a 10px gap. */
+.back-to-top{ bottom:calc(clamp(16px, 3vw, 34px) + 66px); }
+
+/* .rm-link is shared by an <a> (the size guide) and a <button> (the enquiry
+   form). A button needs its own chrome stripped before it can look like a link. */
+button.rm-link{
+  font-family:inherit; background:none; border:none;
+  border-bottom:1px solid rgba(176,138,62,0.5);
+  cursor:pointer; padding:0 0 1px;
+}
+
+/* The footer's secondary route into the enquiry form. */
+.foot-link{
+  display:inline-block; margin-top:14px; text-align:left;
+  font-family:inherit; font-size:0.8rem; background:none; border:none;
+  cursor:pointer; color:var(--gold-light);
+  border-bottom:1px solid rgba(216,189,132,0.45); padding:0 0 2px;
+  transition:color 0.25s ease;
+}
+.foot-link:hover{ color:var(--cream); }
+
+/* .sd-link became an <a> when it started opening WhatsApp, and margin-top does
+   nothing on an inline box. */
+.sd-link{ display:inline-block; }
+
+@media (prefers-reduced-motion: reduce){
+  .wa-float, .wa-float-label{ transition:none; }
+}
+
+/* ---------------------------------------------------------------------------
+   TOUCH TARGETS
+   Several controls are drawn smaller than the 44px minimum a thumb needs — the
+   carousel arrows, the filter chips, the modal's close and paging buttons. Rather
+   than resize them and change a design that is meant to stay put, each grows an
+   invisible pseudo-element to the full 44px. The hit area gets bigger; nothing
+   moves and nothing looks different.
+
+   Coarse pointers only. A mouse is precise enough already, and enlarging hover
+   regions on desktop would make neighbouring controls fight over the cursor.
+   --------------------------------------------------------------------------- */
+
+@media (pointer: coarse){
+  .chip, .fr-tabs button, .filter-clear{ position:relative; }
+  /* Full width of the control, 44px tall — grown vertically, where these fall
+     short, and not horizontally, where they would overlap their neighbours. */
+  .chip::after, .fr-tabs button::after, .filter-clear::after{
+    content:''; position:absolute; left:0; right:0; top:50%;
+    height:44px; transform:translateY(-50%);
+  }
+
+  .rm-nav button, .coll-arrows button, .rm-close, .foot-social a{ position:relative; }
+  .rm-nav button::after, .coll-arrows button::after,
+  .rm-close::after, .foot-social a::after{
+    content:''; position:absolute; left:50%; top:50%;
+    width:44px; height:44px; transform:translate(-50%, -50%);
+  }
+
+  /* The burger is 24x25 of drawn lines and is the only way into the menu on a
+     phone. Negative margin cancels the padding, so it stays exactly where it was. */
+  .burger{ padding:10px; margin:-10px; }
+}
+
+/* ---------------------------------------------------------------------------
+   LEGAL PAGES AND 404
+   Long-form reading, which the home page has none of. Measure is capped at 68
+   characters because the eye loses the start of the next line beyond about
+   seventy — the one typographic rule worth obeying on a page of policy text.
+   --------------------------------------------------------------------------- */
+
+/* Enough height that a short page (the 404, mainly) still pushes the footer to
+   the bottom of the screen instead of leaving it stranded mid-viewport. */
+.legal-page{ padding:clamp(48px, 7vw, 96px) 0 clamp(56px, 8vw, 110px); min-height:64vh; }
+.legal-page .wrap{ max-width:760px; }
+.legal-page h1{ font-size:clamp(2rem, 4.4vw, 2.9rem); line-height:1.15; }
+.legal-page h2{
+  font-size:1.22rem; margin:38px 0 12px; padding-top:18px;
+  border-top:1px solid var(--line);
+}
+.legal-page h3{ font-size:0.98rem; margin:22px 0 8px; }
+.legal-page p, .legal-page li{ font-size:0.95rem; color:var(--ink-soft); max-width:68ch; }
+.legal-page p{ margin-bottom:14px; }
+.legal-page ul{ margin:0 0 16px 20px; }
+.legal-page li{ margin-bottom:8px; }
+.legal-page strong{ color:var(--ink); font-weight:500; }
+.legal-page code{
+  font-size:0.86em; background:var(--cream-deep); padding:1px 5px; border-radius:2px;
+}
+/* Prose links only. Scoped to p/li rather than every <a> inside the page, so the
+   404's buttons keep their own colours instead of being repainted gold. */
+.legal-page p a, .legal-page li a{
+  color:var(--gold); border-bottom:1px solid rgba(176,138,62,0.45);
+}
+.legal-page p a:hover, .legal-page li a:hover{
+  color:var(--ink); border-bottom-color:var(--ink);
+}
+
+.legal-intro{ font-size:1.05rem !important; margin-top:14px; }
+.legal-updated{
+  font-size:0.7rem !important; letter-spacing:0.16em; text-transform:uppercase;
+  color:var(--gold); margin:10px 0 30px;
+}
+/* No underline on the "back" link — it sits alone and reads as a control. */
+.legal-back{ margin-top:42px; padding-top:24px; border-top:1px solid var(--line); }
+.legal-back a{ border-bottom:none; }
+.legal-back a:hover{ border-bottom:none; }
+
+.nf-actions{ display:flex; flex-wrap:wrap; gap:14px; margin-top:30px; }
+
+/* The header row on a narrow phone is brand + chat button + burger inside about
+   390px. With the full label the burger is pushed past the right edge — and since
+   body clips overflow-x, it disappears entirely and the mobile menu becomes
+   unreachable. Below this width the label is clipped rather than removed: it stays
+   in the accessibility tree so the button keeps its name, and with no visible text
+   left, WCAG 2.5.3 (Label in Name) no longer has anything to disagree with. */
+@media (max-width: 620px){
+  .nav-icons{ gap:12px; }
+  header .wa-btn{ padding:11px 15px; }
+  header .wa-btn-text{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+  }
+}
+
+/* `.foot-col a { display:block }` also catches the chat button, which is an <a>,
+   and a block box breaks the icon onto its own line. Matched with the same
+   specificity plus the class so it wins without !important. */
+.foot-col a.wa-btn{ display:inline-flex; margin-bottom:0; }

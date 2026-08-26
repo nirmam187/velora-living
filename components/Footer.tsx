@@ -1,8 +1,11 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { site } from '@/lib/site'
 import { useEnquiry } from './EnquiryContext'
+import WhatsAppCta from './WhatsAppCta'
+import WhatsAppIcon from './WhatsAppIcon'
 
 export default function Footer() {
   const { openEnquiry } = useEnquiry()
@@ -72,26 +75,34 @@ export default function Footer() {
             <h3>Get in Touch</h3>
             <a href={`mailto:${site.email}`}>{site.email}</a>
             <p>{site.location}</p>
-            <p>We&apos;re online-first — reach us fastest on Instagram.</p>
-            <button
-              type="button"
-              className="cta-btn gold"
-              style={{ marginTop: 4 }}
-              onClick={() => openEnquiry()}
-            >
-              Send an Enquiry
+            <p>We&apos;re online-first — WhatsApp reaches us fastest.</p>
+            <WhatsAppCta className="cta-btn gold wa-btn" style={{ marginTop: 4 }}>
+              <WhatsAppIcon size={16} />
+              Chat on WhatsApp
+            </WhatsAppCta>
+            {/* The form is the slower path, but some people would rather write than
+                chat — and it is the one that captures an email address. */}
+            <button type="button" className="foot-link" onClick={() => openEnquiry()}>
+              Or send an enquiry form
             </button>
           </div>
         </div>
 
         <div className="foot-bottom">
           <p>© {year} Velora Living. Where heritage meets home.</p>
-          {/* These were placeholders in the original markup and still are — the
-              copy is yours to write. See "Still to do" in the README. */}
+          {/*
+            Real pages, not placeholders. Meta will not approve an ad account whose
+            landing page has no reachable privacy policy, and its crawler follows
+            these links to find it.
+
+            "Shipping & Returns" and "Care Guide" used to sit here pointing at
+            href="#". They were removed rather than left dead: a link that goes
+            nowhere is worse in front of paid traffic than a link that isn't there.
+            Write the copy and they can come back.
+          */}
           <div className="legal">
-            <a href="#">Privacy Policy</a>
-            <a href="#">Shipping &amp; Returns</a>
-            <a href="#">Care Guide</a>
+            <Link href="/privacy-policy">Privacy Policy</Link>
+            <Link href="/terms">Terms of Use</Link>
           </div>
         </div>
       </div>

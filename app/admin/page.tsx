@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { isAdmin, adminPassword } from '@/lib/admin-auth'
 import { emailProvider } from '@/lib/email'
 import Filters from './Filters'
+import type { Enquiry } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
 
@@ -224,6 +225,8 @@ export default async function AdminPage({
                   {enquiry.message}
                 </p>
 
+                <Campaign enquiry={enquiry} />
+
                 <div className="flex flex-wrap items-center gap-4">
                   <form action={toggleHandled}>
                     <input type="hidden" name="id" value={enquiry.id} />
@@ -371,4 +374,40 @@ function buildHref(params: SearchParams, overrides: Partial<SearchParams>): stri
   }
   const string = query.toString()
   return string ? `/admin?${string}` : '/admin'
+}
+
+/**
+ * Which advertisement produced this lead.
+ *
+ * Renders nothing for organic enquiries, which is most of them outside a campaign
+ * — an empty "Source: —" row on every card would be noise. Captured on the
+ * visitor's first page of the session; see lib/utm.ts.
+ */
+function Campaign({ enquiry }: { enquiry: Enquiry }) {
+  const fields: { label: string; value: string | null }[] = [
+    { label: 'Source', value: enquiry.utmSource },
+    { label: 'Medium', value: enquiry.utmMedium },
+    { label: 'Campaign', value: enquiry.utmCampaign },
+    { label: 'Ad', value: enquiry.utmContent },
+    { label: 'Term', value: enquiry.utmTerm },
+  ].filter((field) => Boolean(field.value))
+
+  // fbclid on its own still means "came from a Meta ad", even with no utm tags on
+  // the link — worth showing rather than filing the lead as organic.
+  const fromMeta = Boolean(enquiry.fbclid)
+  if (fields.length === 0 && !fromMeta) return null
+
+  return (
+    <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-1 border-l-2 border-line pl-4 text-[11px] text-ink-soft">
+      {fields.map((field) => (
+        <span key={field.label}>
+          <span className="uppercase tracking-[0.12em] text-gold">{field.label}</span>{' '}
+          {field.value}
+        </span>
+      ))}
+      {fromMeta && (
+        <span className="uppercase tracking-[0.12em] text-emerald">Meta ad click</span>
+      )}
+    </div>
+  )
 }

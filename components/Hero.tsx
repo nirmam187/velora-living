@@ -1,6 +1,8 @@
 import Image from 'next/image'
 import Reveal from './Reveal'
 import CountUp from './CountUp'
+import WhatsAppCta from './WhatsAppCta'
+import WhatsAppIcon from './WhatsAppIcon'
 
 const STATS = [
   { num: '16', label: 'Signature designs' },
@@ -21,7 +23,18 @@ export default function Hero() {
           capital into modern homes — rooted in Bhadohi &amp; Mirzapur artistry,
           designed in Jaipur.
         </p>
+        {/*
+          The chat CTA leads. This is the first screen an ad click lands on, and
+          for most visitors the fastest useful thing is a conversation about size
+          and price — not another scroll. The two original buttons keep their copy
+          and their order behind it; .hero-cta already wraps, so a third button
+          stacks rather than squeezes on a phone.
+        */}
         <div className="hero-cta">
+          <WhatsAppCta className="cta-btn gold wa-btn">
+            <WhatsAppIcon size={17} />
+            Chat on WhatsApp
+          </WhatsAppCta>
           <a href="#collections" className="cta-btn">
             Explore Collections
           </a>
@@ -61,7 +74,14 @@ export default function Hero() {
           width={752}
           height={1093}
           sizes="(max-width: 980px) 100vw, 48vw"
-          quality={82}
+          /*
+            68, not the 82 this started at. This is the largest-contentful-paint
+            element on a page whose whole job is to load fast for people arriving
+            from an advert on mobile data: at 750px wide the AVIF drops from 79 kB
+            to 48 kB, which is a third of the bytes on the critical path, and on a
+            high-DPI phone the two are indistinguishable.
+          */
+          quality={68}
           priority
         />
       </div>

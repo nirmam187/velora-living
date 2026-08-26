@@ -18,6 +18,36 @@ const validCodes = [
 const tidy = (v: unknown) =>
   typeof v === 'string' ? v.replace(/\s+/g, ' ').trim() : v
 
+/**
+ * One campaign field.
+ *
+ * Truncates rather than rejects. These values are written by whoever built the ad
+ * URL, and an over-long utm_content is a reporting nuisance — it must never be the
+ * reason a real lead is turned away at the door.
+ */
+const attributionField = z.preprocess(
+  (v) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, 200) : undefined),
+  z.string().max(200).optional(),
+)
+
+/**
+ * Campaign attribution, captured in the browser and sent along with the enquiry.
+ * Every field is optional: most visits carry none of it. Unknown keys are dropped
+ * by Zod, so a crafted payload cannot smuggle extra columns into the write.
+ */
+export const attributionSchema = z.object({
+  utm_source: attributionField,
+  utm_medium: attributionField,
+  utm_campaign: attributionField,
+  utm_content: attributionField,
+  utm_term: attributionField,
+  fbclid: attributionField,
+  referrer: attributionField,
+  landingPage: attributionField,
+})
+
+export type AttributionInput = z.infer<typeof attributionSchema>
+
 export const enquirySchema = z.object({
   name: z.preprocess(
     tidy,
@@ -67,6 +97,14 @@ export const enquirySchema = z.object({
    * a plain success.
    */
   website: z.string().max(500).optional(),
+  /** See attributionSchema. Absent on organic visits. */
+  attribution: attributionSchema.optional(),
+  /**
+   * The id the browser Pixel used for this submission's `Lead` event, so the
+   * server's copy can be deduplicated against it. Absent when the Pixel never
+   * loaded — in which case the server event is the only one Meta will receive.
+   */
+  eventId: z.string().max(64).optional(),
 })
 
 export type EnquiryInput = z.infer<typeof enquirySchema>

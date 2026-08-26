@@ -17,7 +17,7 @@
  * claim. It drives the filter buttons on the Full Range section.
  */
 
-import { productByCode, type Material, type Weave } from './products'
+import { collections, productByCode, type Material, type Weave } from './products'
 
 export type CatalogueStyle = 'traditional' | 'modern' | 'plain'
 
@@ -883,6 +883,13 @@ export function rugByCode(code: string): {
   alt: string
   /** The curated name, or the catalogue description as a stand-in. */
   label: string
+  /**
+   * Which part of the range this rug belongs to, as a display label. Doubles as
+   * `content_category` on the Meta tracking events, which is what makes an ad
+   * report able to say "Modern Heritage outsells Classic" — so the strings here
+   * are the ones that will show up in Events Manager.
+   */
+  category: string
 } | undefined {
   const product = productByCode(code)
   if (product) {
@@ -891,6 +898,9 @@ export function rugByCode(code: string): {
       image: product.image,
       alt: product.alt,
       label: product.name,
+      category:
+        collections.find((c) => c.id === product.collection)?.label ??
+        product.collection,
     }
   }
   const rug = byCode.get(code)
@@ -900,5 +910,6 @@ export function rugByCode(code: string): {
     image: rug.image,
     alt: rug.alt,
     label: catalogueLabel(rug),
+    category: `Full Range — ${catalogueStyles.find((s) => s.id === rug.style)?.label ?? rug.style}`,
   }
 }

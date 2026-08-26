@@ -2,7 +2,8 @@
 
 import Image from 'next/image'
 import { useState } from 'react'
-import { useEnquiry } from './EnquiryContext'
+import WhatsAppCta from './WhatsAppCta'
+import WhatsAppIcon from './WhatsAppIcon'
 
 const NAV_LINKS = [
   { href: '#collections', label: 'Collections' },
@@ -17,7 +18,6 @@ const NAV_LINKS = [
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
-  const { openEnquiry } = useEnquiry()
 
   return (
     <header>
@@ -45,13 +45,10 @@ export default function Header() {
         </nav>
 
         <div className="nav-icons">
-          <button
-            type="button"
-            className="cta-btn gold"
-            onClick={() => openEnquiry()}
-          >
-            Enquire Now
-          </button>
+          <WhatsAppCta className="cta-btn gold wa-btn">
+            <WhatsAppIcon size={16} />
+            <span className="wa-btn-text">Chat on WhatsApp</span>
+          </WhatsAppCta>
           <button
             className="burger"
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}

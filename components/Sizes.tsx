@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import Reveal from './Reveal'
 import { rugSizes } from '@/data/sizes'
-import { useEnquiry } from './EnquiryContext'
+import WhatsAppCta from './WhatsAppCta'
+import { sizeMessage } from '@/lib/whatsapp'
 
 /**
  * The size ladder. Chip proportions scale linearly from the smallest rug to the
@@ -44,7 +45,6 @@ const RUG_CENTRE_PCT = 56
 export default function Sizes() {
   // 5'x8' is the most-ordered size, so the panel opens on something useful.
   const [selected, setSelected] = useState(3)
-  const { openEnquiry } = useEnquiry()
 
   const size = rugSizes[selected]!
 
@@ -106,13 +106,11 @@ export default function Sizes() {
             </div>
             <div className="sd-room">{size.room}</div>
             <p>{size.note}</p>
-            <button
-              type="button"
-              className="sd-link"
-              onClick={() => openEnquiry()}
-            >
-              Ask about this size
-            </button>
+            {/* The message names the size, so the studio can answer with a price
+                without a round trip. */}
+            <WhatsAppCta className="sd-link" message={sizeMessage(size.feetLong)}>
+              Ask about this size on WhatsApp
+            </WhatsAppCta>
           </div>
 
           <div className="sd-plan" aria-hidden="true">

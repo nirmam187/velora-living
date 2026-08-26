@@ -5,6 +5,7 @@ import { rugByCode } from '@/data/catalogue'
 import { sendMail, ownerAddress } from '@/lib/email'
 import { ownerNotification, customerAutoReply } from '@/lib/email-templates'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
+import { metaCookies, sendMetaEvent } from '@/lib/meta'
 import { site } from '@/lib/site'
 
 export const runtime = 'nodejs'
@@ -63,6 +64,10 @@ export async function POST(request: Request) {
 
   const rug = data.rugCode ? rugByCode(data.rugCode) : undefined
 
+  // Which ad produced this, if any. Captured in the browser on arrival and sent
+  // back with the form — see lib/utm.ts.
+  const attribution = data.attribution ?? {}
+
   try {
     const enquiry = await prisma.enquiry.create({
       data: {
@@ -74,6 +79,14 @@ export async function POST(request: Request) {
         rugName: rug?.label ?? null,
         ip,
         userAgent: request.headers.get('user-agent')?.slice(0, 400) ?? null,
+        utmSource: attribution.utm_source ?? null,
+        utmMedium: attribution.utm_medium ?? null,
+        utmCampaign: attribution.utm_campaign ?? null,
+        utmContent: attribution.utm_content ?? null,
+        utmTerm: attribution.utm_term ?? null,
+        fbclid: attribution.fbclid ?? null,
+        referrer: attribution.referrer ?? null,
+        landingPage: attribution.landingPage ?? null,
       },
     })
 
@@ -116,6 +129,44 @@ export async function POST(request: Request) {
         `[enquiry] ${enquiry.id} stored but email incomplete — owner:${notify.ok} autoReply:${autoReply.ok}`,
       )
     }
+
+    /*
+      Server-side `Lead`. Fired here and nowhere earlier: this line is only reached
+      once the enquiry is durably in the database and both emails have been
+      attempted, so the conversion Meta optimises against is a real, answerable
+      lead rather than a button press.
+
+      A failed EMAIL does not suppress it. The lead exists, it is stored, and the
+      owner can see it in /admin — withholding the conversion because a transport
+      hiccuped would quietly starve the ad account of signal for a reason that has
+      nothing to do with the customer. The failure is logged loudly just above.
+
+      Awaited rather than fired and forgotten: a serverless function can be frozen
+      the instant it returns a response, which would kill an in-flight request.
+    */
+    const { fbp, fbc } = metaCookies(request.headers)
+    await sendMetaEvent({
+      eventName: 'Lead',
+      // Falls back to the enquiry's own id when the browser Pixel never loaded.
+      // Still unique, still stable, so a retry cannot double-count.
+      eventId: data.eventId || `enquiry-${enquiry.id}`,
+      sourceUrl: request.headers.get('referer'),
+      user: {
+        email: enquiry.email,
+        phone: enquiry.phone,
+        ip,
+        userAgent: request.headers.get('user-agent')?.slice(0, 400) ?? null,
+        fbp,
+        fbc,
+      },
+      customData: rug
+        ? {
+            content_ids: [rug.code],
+            content_name: rug.label,
+            content_category: rug.category,
+          }
+        : undefined,
+    })
 
     return NextResponse.json({ ok: true, id: enquiry.id })
   } catch (error) {

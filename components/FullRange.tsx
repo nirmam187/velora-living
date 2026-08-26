@@ -11,6 +11,10 @@ import {
   type CatalogueStyle,
 } from '@/data/catalogue'
 import { useEnquiry } from './EnquiryContext'
+import WhatsAppCta from './WhatsAppCta'
+import WhatsAppIcon from './WhatsAppIcon'
+import { rugMessage } from '@/lib/whatsapp'
+import { trackViewContent } from '@/lib/meta-pixel'
 import { sizeRange } from '@/data/sizes'
 
 /** Cards rendered before the visitor asks for more. Eighty-nine at once is a lot of image. */
@@ -43,6 +47,21 @@ export default function FullRange() {
   const position = current ? visible.indexOf(current) : -1
 
   const close = useCallback(() => setOpenCode(null), [])
+
+  /** Doubles as Meta's `content_category` — see rugByCode in data/catalogue.ts. */
+  const categoryOf = (rug: CatalogueRug) =>
+    `Full Range — ${catalogueStyles.find((s) => s.id === rug.style)?.label ?? rug.style}`
+
+  // Same signal the curated viewer sends: opening a rug is a view, scrolling past
+  // one of eighty-nine cards is not.
+  useEffect(() => {
+    if (!current) return
+    trackViewContent({
+      code: current.code,
+      label: catalogueLabel(current),
+      category: categoryOf(current),
+    })
+  }, [current])
 
   const step = useCallback(
     (delta: number) => {
@@ -263,16 +282,29 @@ export default function FullRange() {
                 </p>
               )}
 
+              {/* WhatsApp first, and the dialog stays open behind it — see the
+                  note on the same block in RugModal.tsx. */}
               <div className="rm-actions">
+                <WhatsAppCta
+                  className="cta-btn wa-btn"
+                  message={rugMessage(catalogueLabel(current), current.code)}
+                  contentId={current.code}
+                  contentName={catalogueLabel(current)}
+                  contentCategory={categoryOf(current)}
+                  aria-label={`Enquire on WhatsApp about ${current.code}`}
+                >
+                  <WhatsAppIcon size={17} />
+                  Enquire on WhatsApp
+                </WhatsAppCta>
                 <button
                   type="button"
-                  className="cta-btn"
+                  className="rm-link"
                   onClick={() => {
                     close()
                     openEnquiry(current.code)
                   }}
                 >
-                  Enquire About This Rug
+                  Or send an enquiry form
                 </button>
                 <a href="#sizes" className="rm-link" onClick={close}>
                   See the size guide

@@ -2,13 +2,16 @@
 
 import Image from 'next/image'
 import Reveal from './Reveal'
-import { spotlightProduct } from '@/data/products'
-import { useEnquiry } from './EnquiryContext'
+import { collections, spotlightProduct } from '@/data/products'
+import WhatsAppCta from './WhatsAppCta'
+import WhatsAppIcon from './WhatsAppIcon'
+import { rugMessage } from '@/lib/whatsapp'
 
 /** The featured rug. Which rug appears here is set by SPOTLIGHT_CODE in data/products.ts. */
 export default function Spotlight() {
-  const { openEnquiry } = useEnquiry()
   const product = spotlightProduct
+  const category =
+    collections.find((c) => c.id === product.collection)?.label ?? product.collection
 
   const image = product.detailImage ?? product.image
   const alt = product.detailAlt ?? product.alt
@@ -33,13 +36,17 @@ export default function Spotlight() {
             character to modern living.&rdquo;
           </div>
           <div className="hero-cta" style={{ marginTop: 24 }}>
-            <button
-              type="button"
-              className="cta-btn"
-              onClick={() => openEnquiry(product.code)}
+            <WhatsAppCta
+              className="cta-btn wa-btn"
+              message={rugMessage(product.name, product.code)}
+              contentId={product.code}
+              contentName={product.name}
+              contentCategory={category}
+              aria-label={`Enquire on WhatsApp about ${product.name}`}
             >
-              Enquire About This Rug
-            </button>
+              <WhatsAppIcon size={17} />
+              Enquire on WhatsApp
+            </WhatsAppCta>
           </div>
         </Reveal>
       </div>

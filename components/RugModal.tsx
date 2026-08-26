@@ -4,7 +4,11 @@ import Image from 'next/image'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRugViewer } from './RugViewerContext'
 import { useEnquiry } from './EnquiryContext'
+import WhatsAppCta from './WhatsAppCta'
+import WhatsAppIcon from './WhatsAppIcon'
 import { collections } from '@/data/products'
+import { rugMessage } from '@/lib/whatsapp'
+import { trackViewContent } from '@/lib/meta-pixel'
 import { techniqueByName } from '@/data/craft'
 import { sizeRange } from '@/data/sizes'
 
@@ -38,6 +42,20 @@ export default function RugModal() {
   useEffect(() => {
     setViewIndex(0)
   }, [current?.code])
+
+  // Opening the viewer is the moment a visitor shows interest in one particular
+  // rug, so that is what gets reported — once per rug, including each one paged
+  // through, because paging is browsing and Meta should see it as such.
+  useEffect(() => {
+    if (!current) return
+    trackViewContent({
+      code: current.code,
+      label: current.name,
+      category:
+        collections.find((c) => c.id === current.collection)?.label ??
+        current.collection,
+    })
+  }, [current])
 
   const view = views[viewIndex] ?? views[0]
 
@@ -210,16 +228,36 @@ export default function RugModal() {
 
           {technique && <p className="rm-technique">{technique.detail}</p>}
 
+          {/*
+            WhatsApp first. The modal is deliberately NOT closed on the way out:
+            the link opens in a new tab, and tearing the dialog down inside the
+            click handler risks unmounting the anchor before the browser has
+            followed it. Coming back to the tab lands you on the same rug.
+          */}
           <div className="rm-actions">
+            <WhatsAppCta
+              className="cta-btn wa-btn"
+              message={rugMessage(current.name, current.code)}
+              contentId={current.code}
+              contentName={current.name}
+              contentCategory={
+                collections.find((c) => c.id === current.collection)?.label ??
+                current.collection
+              }
+              aria-label={`Enquire on WhatsApp about ${current.name}`}
+            >
+              <WhatsAppIcon size={17} />
+              Enquire on WhatsApp
+            </WhatsAppCta>
             <button
               type="button"
-              className="cta-btn"
+              className="rm-link"
               onClick={() => {
                 close()
                 openEnquiry(current.code)
               }}
             >
-              Enquire About This Rug
+              Or send an enquiry form
             </button>
             <a
               href="#sizes"

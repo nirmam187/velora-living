@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import { Fraunces, Jost } from 'next/font/google'
+import Attribution from '@/components/Attribution'
+import MetaPixel from '@/components/MetaPixel'
+import WhatsAppFloat from '@/components/WhatsAppFloat'
 import { site, siteUrl } from '@/lib/site'
 import './globals.css'
 
@@ -58,12 +61,21 @@ export const metadata: Metadata = {
     siteName: site.name,
     title: site.title,
     description: site.description,
+    /*
+      1200 x 630 — Facebook, Instagram, WhatsApp and X all crop link previews to
+      1.91:1, and this is that ratio exactly, so nothing important gets cut.
+
+      The hero photograph used to be here. It is 752 x 1093, and a portrait image
+      in a landscape frame renders as a small square thumbnail beside the text
+      rather than the full-width card an ad or a shared link deserves. This file
+      is a landscape crop of the Afreen room shot, made for this purpose.
+    */
     images: [
       {
-        url: '/images/hero/bold-floral-living-room.jpg',
-        width: 752,
-        height: 1093,
-        alt: 'Velora Living bold floral hand-tufted rug styled in a living room',
+        url: '/images/og/velora-living-og.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'A Velora Living hand-tufted rug in blue and gold, styled in a living room with a leather chesterfield',
       },
     ],
   },
@@ -71,7 +83,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: site.title,
     description: site.description,
-    images: ['/images/hero/bold-floral-living-room.jpg'],
+    images: ['/images/og/velora-living-og.jpg'],
   },
   robots: {
     index: true,
@@ -96,7 +108,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${fraunces.variable} ${jost.variable}`}>
-      <body>{children}</body>
+      {/*
+        All three live in the layout rather than the home page, so they cover the
+        legal pages and the 404 as well. Ad traffic does land on those — a Meta
+        reviewer opens the privacy policy directly, and a stale ad URL lands on the
+        404 with a visitor who is still worth talking to.
+      */}
+      <body>
+        <Attribution />
+        {children}
+        <WhatsAppFloat />
+        <MetaPixel />
+      </body>
     </html>
   )
 }

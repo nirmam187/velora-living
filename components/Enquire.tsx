@@ -6,6 +6,8 @@ import Reveal from './Reveal'
 import { collections, productByCode, productsIn } from '@/data/products'
 import { catalogueLabel, catalogueStyles, catalogueIn, rugByCode } from '@/data/catalogue'
 import { useEnquiry } from './EnquiryContext'
+import { newEventId, trackPixel } from '@/lib/meta-pixel'
+import { readAttribution } from '@/lib/utm'
 import { site } from '@/lib/site'
 
 type Status =
@@ -59,6 +61,10 @@ export default function Enquire() {
 
     setStatus({ kind: 'sending' })
 
+    // One id for this submission, shared by the Pixel call below and the server's
+    // Conversions API call, so Meta counts the lead once rather than twice.
+    const eventId = newEventId()
+
     try {
       const response = await fetch('/api/enquiry', {
         method: 'POST',
@@ -70,6 +76,9 @@ export default function Enquire() {
           message: message.trim(),
           rugCode,
           website,
+          // Which ad brought them here, captured on arrival.
+          attribution: readAttribution(),
+          eventId,
         }),
       })
       const data = await response.json()
@@ -84,6 +93,21 @@ export default function Enquire() {
         statusRef.current?.focus()
         return
       }
+
+      // Only now — the enquiry is stored and answerable. Firing on submit would
+      // count every failed attempt, and firing on click would count people who
+      // never finished the form at all.
+      trackPixel(
+        'Lead',
+        selected
+          ? {
+              content_ids: [selected.code],
+              content_name: selected.label,
+              content_category: selected.category,
+            }
+          : {},
+        eventId,
+      )
 
       setStatus({ kind: 'done', name: name.trim().split(' ')[0] ?? name.trim() })
     } catch {

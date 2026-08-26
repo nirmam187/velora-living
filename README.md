@@ -21,7 +21,8 @@ as React components with the design preserved.
 6. [Deploying to Vercel](#6-deploying-to-vercel)
 7. [Connecting a custom domain](#7-connecting-a-custom-domain)
 8. [Redeploying after changes](#8-redeploying-after-changes)
-9. [Still to do](#9-still-to-do)
+9. [Meta ads tracking](#9-meta-ads-tracking)
+10. [Still to do](#10-still-to-do)
 
 ---
 
@@ -393,6 +394,8 @@ In the Vercel project: **Settings → Environment Variables**. Add each of these
 | `ADMIN_PASSWORD` | a long random password for `/admin` |
 | `AUTH_SECRET` | `openssl rand -base64 32` |
 | `NEXT_PUBLIC_SITE_URL` | `https://veloraliving.com` (no trailing slash) |
+| `NEXT_PUBLIC_META_PIXEL_ID` | your Meta Pixel ID — see [section 9](#9-meta-ads-tracking) |
+| `META_CONVERSIONS_API_ACCESS_TOKEN` | your Conversions API token — **secret** |
 
 `AUTH_SECRET` is **required** in production — the app refuses to start signing
 sessions without it, rather than falling back to something insecure.
@@ -474,17 +477,177 @@ DATABASE_URL="postgres://…" npx prisma migrate deploy   # applies it to produc
 Adding or editing rugs never touches the schema — that is just `data/products.ts` and
 a push.
 
+> **The campaign-tracking work added nine columns to `Enquiry`** (`utmSource`,
+> `utmMedium`, `utmCampaign`, `utmContent`, `utmTerm`, `fbclid`, `referrer`,
+> `landingPage`, and an index on `utmCampaign`). They are all nullable, so applying
+> them to a database with existing rows is safe and loses nothing — but they do have
+> to be applied before the deploy, or every enquiry submission will fail against the
+> old table.
+
 ---
 
-## 9. Still to do
+## 9. Meta ads tracking
+
+Everything the site needs to run Meta (Facebook / Instagram) ads is wired up. None
+of it does anything until you create the Pixel and set two environment variables —
+with them unset, no script loads, no events are sent, and the site behaves exactly
+as it did before.
+
+### What gets measured
+
+| Event | Fires when | Browser Pixel | Server (Conversions API) |
+| --- | --- | --- | --- |
+| `PageView` | any page loads | yes | — |
+| `ViewContent` | a visitor opens a rug in the quick-view | yes | — |
+| `Contact` | a visitor clicks any WhatsApp button | yes | yes |
+| `Lead` | an enquiry is stored successfully | yes | yes |
+
+`ViewContent`, `Contact` and `Lead` all carry `content_ids` (the rug code),
+`content_name` and `content_category` (Classic Heritage, Modern Heritage, or the
+Full Range style), so Meta can report which rugs actually sell.
+
+### Why there are two halves
+
+The browser Pixel alone loses a large share of conversions: iOS App Tracking
+Transparency, Safari's tracking prevention, and any ad blocker will stop
+`fbevents.js` from ever loading. The Conversions API sends the same event from the
+server, where none of that applies.
+
+Both halves send the **same `event_id`** for the same action, which is how Meta
+knows they are one conversion and not two. If you ever see conversions doubling in
+Events Manager, that is the thing to check first.
+
+Email addresses and phone numbers sent from the server are **SHA-256 hashed**
+before they leave the machine. Meta can match them to an account; it never receives
+the address itself.
+
+### Setting it up
+
+**1. Create the Pixel.** [Events Manager](https://business.facebook.com/events_manager2)
+→ **Connect data sources** → **Web** → **Meta Pixel**. Name it "Velora Living".
+The long number under the name is your **Pixel ID**.
+
+**2. Generate the Conversions API token.** In the same dataset: **Settings** →
+scroll to **Conversions API** → **Generate access token**. Copy it immediately —
+it is shown once. This token can write events into your dataset, so treat it like a
+password: Vercel dashboard only, never in a file you commit.
+
+**3. Set the variables** in Vercel → Settings → Environment Variables:
+
+| Variable | Where it comes from | Secret? |
+| --- | --- | --- |
+| `NEXT_PUBLIC_META_PIXEL_ID` | Events Manager → your dataset → the ID under the name | no, it is public by design |
+| `META_CONVERSIONS_API_ACCESS_TOKEN` | Events Manager → Settings → Conversions API | **yes** |
+| `META_TEST_EVENT_CODE` | Events Manager → Test events → the `TEST…` code | no, but remove it before going live |
+
+Redeploy after adding them. `NEXT_PUBLIC_` variables are compiled into the browser
+bundle at build time, so an existing deployment will not pick up the Pixel ID until
+it is rebuilt.
+
+### Verifying it works
+
+Do this **before** spending anything.
+
+1. In Events Manager, open your dataset → **Test events**. Copy the `TEST…` code
+   shown there into `META_TEST_EVENT_CODE` and redeploy.
+2. Open the live site. Within a few seconds `PageView` should appear in the Test
+   events list.
+3. Open a rug → `ViewContent` appears, with the rug code in its parameters.
+4. Click any WhatsApp button → `Contact` appears **twice**, once from Browser and
+   once from Server, and Meta should label the pair as deduplicated. Two separate
+   undeduplicated rows means the `event_id` is not matching.
+5. Send a test enquiry → `Lead` appears, same browser/server pair.
+6. **Delete `META_TEST_EVENT_CODE` and redeploy.** While it is set, events are
+   visible in Test events but are **not** counted towards ad optimisation or
+   reporting. This step is easy to forget and expensive to forget.
+
+Two other tools worth knowing:
+
+- The [Meta Pixel Helper](https://chromewebstore.google.com/detail/meta-pixel-helper/fdgfkebogiimcoedlicjlajpkdmockpc)
+  Chrome extension shows what the browser half is firing, live on the page.
+- **Events Manager → your dataset → Overview** shows the event match quality score
+  for the server half once real traffic arrives. Anything above about 6 is healthy.
+
+### Which ad produced which lead
+
+Every enquiry stores the campaign it came from. When someone arrives on a link
+carrying `utm_` parameters or Meta's `fbclid`, those are captured on the first page
+of the session, held in session storage, and written to the database with whatever
+they eventually submit. `/admin` shows them on the enquiry card.
+
+First touch wins: someone who arrives from an ad, wanders off and comes back is
+still credited to the ad. Tag your ad links like this and the reporting follows:
+
+```
+https://veloraliving.com/?utm_source=facebook&utm_medium=paid&utm_campaign=diwali-2026&utm_content=carousel-a
+```
+
+### Turning it off
+
+Delete `NEXT_PUBLIC_META_PIXEL_ID` and redeploy. No script loads, no events are
+sent, every tracking call becomes a no-op, and nothing else on the site changes.
+
+---
+
+## 10. Still to do
+
+### Before the first ad goes live — things only you can do
+
+None of these are code. In order:
+
+1. **Deploy**, and set `NEXT_PUBLIC_SITE_URL` to the real domain. Everything below
+   needs a live HTTPS address.
+2. **Create the Pixel** in [Events Manager](https://business.facebook.com/events_manager2)
+   and generate the Conversions API token — [section 9](#9-meta-ads-tracking) has
+   the click-by-click. Put both into Vercel and redeploy.
+3. **Verify the events arrive** using the Test events code, then remove that code.
+   Section 9 again. Do not skip this: an untested Pixel usually means an ad account
+   optimising against nothing.
+4. **Verify your domain** in Business Manager → Brand safety and suitability →
+   Domains. Meta requires this before it will let you configure Aggregated Event
+   Measurement, which is what makes conversions countable for iOS users.
+5. **Configure Aggregated Event Measurement** once the domain is verified: Events
+   Manager → Aggregated Event Measurement → Configure Web Events. Rank the events —
+   `Lead` first, then `Contact`, then `ViewContent`, then `PageView`. Only the top
+   eight count, and you have four.
+6. **Run the site through the [Sharing Debugger](https://developers.facebook.com/tools/debug/)**
+   and press "Scrape Again". This is what forces Meta to fetch the new Open Graph
+   card; without it a previously-shared link keeps showing whatever was cached.
+7. **Connect the WhatsApp number** `+91 9879535039` to the Facebook Page:
+   Meta Business Suite → Settings → WhatsApp accounts. Click-to-WhatsApp ad
+   objectives will not appear until the number is linked to the Page you advertise
+   from, and the number must not be signed into WhatsApp Business App and the
+   Cloud API at the same time.
+8. **Complete Business Verification** (Business Manager → Security Centre) and add a
+   **payment method** to the ad account. Both take a day or two to clear and both
+   block spending, so start them before you need them.
+9. **Check the privacy policy reads true to you.** `/privacy-policy` describes what
+   the code actually does, and Meta's ad review will open it. If you change how you
+   handle customer data, change that page with it.
+
+### Still open in the code
 
 Things I deliberately left for you rather than inventing:
 
 - **Photographs for the Craftsmanship section** — see [section 2b](#2b-replacing-the-craftsmanship-images).
   This is the main outstanding item.
-- **The three legal links in the footer** (Privacy Policy, Shipping & Returns, Care
-  Guide) still point at `#`, exactly as they did in the original. They need real
-  pages, and the copy is a business decision — particularly the returns terms.
+- **Shipping & Returns, and a Care Guide.** The footer used to carry links to both,
+  pointing at `#`. They were removed when the legal row was wired up — a dead link
+  in front of paid traffic is worse than no link — and they should come back as
+  real pages once the copy exists. The returns terms in particular are a business
+  decision, not something to invent: `/terms` currently says only that a custom rug
+  cannot be cancelled once weaving has started.
+- **The web-app icon is 137 kB.** `public/images/brand/velora-mark-512.png` is
+  fetched by every browser that reads the manifest. It is a flat monogram that ought
+  to compress to a tenth of that; it needs a proper PNG optimiser (`pngquant`,
+  `oxipng`, or Squoosh in the browser), which is not installed here. It loads at low
+  priority after everything else, so it costs mobile data rather than page speed.
+- **The last 10 Lighthouse points are in the fonts.** Three font files totalling
+  172 kB are preloaded alongside the hero image, and they are what keeps LCP above
+  2.5 s on a throttled connection. Dropping the preload (`preload: false` on Fraunces
+  in `app/layout.tsx`) would hand that bandwidth to the hero image — at the cost of
+  the headline briefly rendering in a fallback serif on a slow first load. That is a
+  design call, not a technical one, so I have not made it. Say the word either way.
 - **The Pinterest link** in the footer points at `pinterest.com`. Swap in the real
   profile when there is one, or say the word and I'll remove the icon.
 - **A sending domain for email.** Contact details are now Instagram
@@ -514,6 +677,67 @@ Things I deliberately left for you rather than inventing:
 
 ### What was verified
 
+**The Meta ads work (section 9):**
+
+- The Pixel injects only when `NEXT_PUBLIC_META_PIXEL_ID` is set: with it unset there
+  is no script tag, no `noscript` beacon, and no request to connect.facebook.net.
+- With it set, verified against a production build with the Facebook domains blocked
+  at the network layer, so nothing left the machine: `init` and `PageView` fire on
+  load, `Contact` fires on a WhatsApp click, and `ViewContent` fires **once** per rug
+  opened, carrying `content_ids`, `content_name`, `content_category` and
+  `content_type`. (In `next dev` it fires twice — React StrictMode double-invokes
+  effects in development only. The production build was checked specifically for this.)
+- **Deduplication confirmed end to end:** the `eventID` on the browser `Contact` call
+  and the `eventId` in the body of the beacon to `/api/track/whatsapp-click` are the
+  same UUID.
+- `POST /api/track/whatsapp-click` answers 204 for a valid beacon, a malformed body,
+  and a body with no `eventId` — it never throws and never blocks the click.
+- Enquiry → `Lead`: campaign parameters captured from the URL survive into the
+  database. A submission carrying `utm_source=facebook`, `utm_campaign=diwali-2026`,
+  `utm_content=carousel-a` and an `fbclid` stored all four against the enquiry, with
+  the rug code resolved to its name.
+- Rug-code validation still rejects an unknown code (`VLR-999` → 400) across both the
+  curated list and the Full Range.
+
+**The WhatsApp CTAs:**
+
+- Six links on the home page plus one per rug modal, each carrying the right
+  pre-filled message — general on the hero, header, footer and floating button; the
+  rug's name and code on the spotlight and both rug viewers; the selected size on the
+  size guide.
+- Followed one through to WhatsApp: it opens the real conversation with the message
+  already written.
+
+**Forms and states:**
+
+- Empty submit shows all three validation messages and moves focus to the first
+  failing field.
+- A real submission shows "Sending…" with the button disabled, then the success panel.
+- A 500 from the endpoint renders the error banner with `role="alert"` and re-enables
+  the button — no silent failure.
+
+**Layout and reliability:**
+
+- Measured under real mobile emulation (Chrome DevTools Protocol, DPR 3, touch on) at
+  360 px, 390 px, 640 px and 768 px: **no horizontal overflow at any width**, and the
+  burger is 44 x 45 px and on screen at all of them. Below 620 px the header's chat
+  button collapses to its icon; the label is clipped rather than removed, so the
+  button keeps its accessible name.
+- Lighthouse's tap-target audit passes. Controls drawn smaller than 44 px — the
+  carousel arrows, filter chips, modal close and paging buttons, footer social icons
+  — grow an invisible pseudo-element to the full 44 px on coarse pointers only, so
+  nothing about the design moved.
+- `/privacy-policy`, `/terms` and the 404 all render, are in the sitemap (the 404 is
+  `noindex`), and carry the site's own header and footer.
+- Open Graph renders a proper 1200 x 630 landscape card.
+- **A correction to an earlier note:** the "Enquire About This Rug" button was
+  previously reported as not scrolling to the form. It scrolls correctly. The
+  earlier measurement was taken in an automated browser tab that was backgrounded,
+  and Chrome does not run smooth-scroll animations in a hidden tab — `document.hidden`
+  was `true`, every `behavior: 'smooth'` scroll was a no-op, and every
+  `behavior: 'instant'` scroll worked. Nothing in the site was wrong.
+
+
 - Section geometry compared against the original at 1440px, 768px and 390px. Twelve
   of the fifteen measured blocks — announce bar, header, hero, marquee, spotlight,
   origin, craft, promise, sizes, testimonials, gallery and the hero headline — match
@@ -530,8 +754,11 @@ Things I deliberately left for you rather than inventing:
   scroll lock, arrow-key paging, Escape), the gallery lightbox, and the size guide.
 - The size-guide plan diagram was checked at all nine sizes: each rug is drawn
   within 0.04 of its true aspect ratio, on one shared scale.
-- Lighthouse on a production build, median of three runs: **Performance 91,
-  Accessibility 96, Best Practices 100, SEO 100**. Performance ranges 91–93 between
-  runs on localhost; the hero image itself transfers in under 10 ms, and what moves
-  the number is main-thread time during hydration. The only remaining accessibility
+- Lighthouse **mobile**, production build, median of five runs: **Performance 90,
+  Accessibility 96, Best Practices 100, SEO 100**. FCP 0.9 s, Speed Index 0.9 s,
+  TBT 0 ms, CLS 0. Performance is bimodal between runs — 90 when LCP lands at 3.6 s,
+  81 when it lands at 5.3 s — with byte-for-byte identical network traffic in both
+  cases, so the spread is Lighthouse's simulation, not the site. LCP is the hero
+  photograph, and what holds it back is the 172 kB of font files preloaded alongside
+  it; see "Still to do" for the one lever left. The only remaining accessibility
   finding is the colour contrast noted above.
