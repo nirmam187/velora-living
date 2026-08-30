@@ -629,6 +629,26 @@ None of these are code. In order:
 
 Things I deliberately left for you rather than inventing:
 
+- **AR — "see it in your room" — is a prototype awaiting a decision.** It lives on the
+  `add-ar-prototype` branch, at `/ar-demo` (hidden from the nav and set to noindex).
+  Three rugs are built end to end: `scripts/ar/flatten.py` un-warps an angled
+  photograph into a flat texture, `scripts/ar/build_models.py` writes the `.glb` for
+  Android and the `.usdz` for iPhone, and `components/RugAr.tsx` puts them in front of
+  a customer. Models are true-to-size and pinch-to-resize is off, because the whole
+  point is answering "will 5x8 fit here?" correctly.
+
+  Two things to settle before it goes any further. **Size:** everything is built at
+  5x8; nine sizes across 110 rugs is roughly two thousand files and far too much for
+  the repository, so it needs either a short list of offered sizes or generation on
+  request. **The curated twenty:** their photographs are styled room shots and several
+  crop the rug at the frame edge — VLR-01's left corner is outside the picture — and
+  what was never photographed cannot be recovered. Those need reshooting. The 89 Full
+  Range rugs correct automatically, and VLR-121 to VLR-127 need no work at all, their
+  Topshots being flat already.
+
+  Testing it needs HTTPS: WebXR and AR Quick Look both refuse to run over plain HTTP,
+  so open a Vercel preview URL on a phone rather than localhost.
+
 - **Photographs for the Craftsmanship section** — see [section 2b](#2b-replacing-the-craftsmanship-images).
   This is the main outstanding item.
 - **Shipping & Returns, and a Care Guide.** The footer used to carry links to both,
