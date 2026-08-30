@@ -6,6 +6,8 @@ import { useRugViewer } from './RugViewerContext'
 import { useEnquiry } from './EnquiryContext'
 import WhatsAppCta from './WhatsAppCta'
 import WhatsAppIcon from './WhatsAppIcon'
+import RugAr from './RugAr'
+import { arModelFor } from '@/data/ar'
 import { collections } from '@/data/products'
 import { rugMessage } from '@/lib/whatsapp'
 import { trackViewContent } from '@/lib/meta-pixel'
@@ -38,9 +40,17 @@ export default function RugModal() {
 
   const [viewIndex, setViewIndex] = useState(0)
 
-  // Paging to another rug must start again on its catalogue shot.
+  /** Set while the AR sheet is up, so this dialog stops competing with it. */
+  const [arOpen, setArOpen] = useState(false)
+
+  /** Undefined for the rugs that have no 3D model yet — most of them. */
+  const arModel = current ? arModelFor(current.code) : undefined
+
+  // Paging to another rug must start again on its catalogue shot, and must never
+  // leave the AR sheet open showing the rug you just paged away from.
   useEffect(() => {
     setViewIndex(0)
+    setArOpen(false)
   }, [current?.code])
 
   // Opening the viewer is the moment a visitor shows interest in one particular
@@ -94,7 +104,10 @@ export default function RugModal() {
 
   const onKeyDown = useCallback(
     (event: KeyboardEvent) => {
-      if (!isOpen) return
+      // The AR sheet sits on top and runs its own Escape handling and focus. Left
+      // active, this dialog would close underneath it on the first Escape and keep
+      // Tab trapped in a panel the visitor can no longer see.
+      if (!isOpen || arOpen) return
 
       if (event.key === 'Escape') {
         event.preventDefault()
@@ -132,7 +145,7 @@ export default function RugModal() {
         first.focus()
       }
     },
-    [isOpen, close, next, previous],
+    [isOpen, arOpen, close, next, previous],
   )
 
   useEffect(() => {
@@ -249,6 +262,17 @@ export default function RugModal() {
               <WhatsAppIcon size={17} />
               Enquire on WhatsApp
             </WhatsAppCta>
+            {/* Only for rugs that actually have a model built. A "see it in your
+                room" that leads to a missing file is worse than no button. */}
+            {arModel && (
+              <button
+                type="button"
+                className="rm-link"
+                onClick={() => setArOpen(true)}
+              >
+                See it in your room
+              </button>
+            )}
             <button
               type="button"
               className="rm-link"
@@ -283,6 +307,13 @@ export default function RugModal() {
           </button>
         </div>
       </div>
+
+      {arOpen && arModel && (
+        <RugAr
+          rug={{ code: current.code, name: current.name, size: arModel.size }}
+          onClose={() => setArOpen(false)}
+        />
+      )}
     </div>
   )
 }

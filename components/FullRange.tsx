@@ -13,6 +13,8 @@ import {
 import { useEnquiry } from './EnquiryContext'
 import WhatsAppCta from './WhatsAppCta'
 import WhatsAppIcon from './WhatsAppIcon'
+import RugAr from './RugAr'
+import { arModelFor } from '@/data/ar'
 import { rugMessage } from '@/lib/whatsapp'
 import { trackViewContent } from '@/lib/meta-pixel'
 import { sizeRange } from '@/data/sizes'
@@ -28,6 +30,8 @@ export default function FullRange() {
   const [filter, setFilter] = useState<Filter>('all')
   const [shown, setShown] = useState(PAGE)
   const [openCode, setOpenCode] = useState<string | null>(null)
+  /** Set while the AR sheet is up, so this lightbox stops competing with it. */
+  const [arOpen, setArOpen] = useState(false)
 
   const visible = useMemo(
     () => (filter === 'all' ? catalogue : catalogue.filter((r) => r.style === filter)),
@@ -47,6 +51,14 @@ export default function FullRange() {
   const position = current ? visible.indexOf(current) : -1
 
   const close = useCallback(() => setOpenCode(null), [])
+
+  /** Undefined for the rugs that have no 3D model yet — most of them. */
+  const arModel = current ? arModelFor(current.code) : undefined
+
+  // Paging to another rug must never leave the AR sheet showing the previous one.
+  useEffect(() => {
+    setArOpen(false)
+  }, [openCode])
 
   /** Doubles as Meta's `content_category` — see rugByCode in data/catalogue.ts. */
   const categoryOf = (rug: CatalogueRug) =>
@@ -79,7 +91,9 @@ export default function FullRange() {
 
   // Keep the lightbox on the keyboard: Escape closes, arrows page.
   useEffect(() => {
-    if (!current) return
+    // The AR sheet is on top and handles its own Escape. Left active, this would
+    // close the lightbox underneath it on the first press.
+    if (!current || arOpen) return
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         event.preventDefault()
@@ -94,7 +108,7 @@ export default function FullRange() {
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [current, close, step])
+  }, [current, arOpen, close, step])
 
   // Lock the page behind the lightbox without letting it jump: the scrollbar is
   // replaced by equivalent padding.
@@ -296,6 +310,16 @@ export default function FullRange() {
                   <WhatsAppIcon size={17} />
                   Enquire on WhatsApp
                 </WhatsAppCta>
+                {/* Only for rugs that actually have a model built. */}
+                {arModel && (
+                  <button
+                    type="button"
+                    className="rm-link"
+                    onClick={() => setArOpen(true)}
+                  >
+                    See it in your room
+                  </button>
+                )}
                 <button
                   type="button"
                   className="rm-link"
@@ -325,6 +349,17 @@ export default function FullRange() {
             </div>
           </div>
         </div>
+      )}
+
+      {arOpen && current && arModel && (
+        <RugAr
+          rug={{
+            code: current.code,
+            name: catalogueLabel(current),
+            size: arModel.size,
+          }}
+          onClose={() => setArOpen(false)}
+        />
       )}
     </section>
   )
