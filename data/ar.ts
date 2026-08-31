@@ -1,49 +1,108 @@
 /**
- * Which rugs can be stood on a customer's floor.
+ * Which rugs can be stood on a customer's floor, and at what sizes.
  *
- * A rug only appears here once its two models exist in `public/ar/` — a `.glb` for
- * Android and the 3D viewer, a `.usdz` for iPhone. Both are built by
- * `scripts/ar/build_models.py` from a flattened photograph; see `scripts/ar/flatten.py`
- * for how the photograph is squared up first.
+ * HOW A RUG GETS HERE. One flattened photograph, `ar-textures/<code>.jpg`, produced by
+ * `scripts/ar/flatten.py`. That is the whole input. The `.glb` for Android and the
+ * `.usdz` for iPhone are written on demand by `app/ar/[file]/route.ts` from that
+ * texture and a size, so nothing is committed but the photograph.
  *
- * WHY A LIST RATHER THAN A FLAG ON EVERY RUG. Three of the hundred and ten have models
- * so far, and the button must not appear on the other hundred and seven — a "see it in
- * your room" that leads to a missing file is worse than no button at all. Keeping the
- * whitelist here means the rug viewer asks one question and the answer is never a
- * guess.
+ * WHY IT IS BUILT PER REQUEST RATHER THAN COMMITTED. The prototype shipped three rugs
+ * at one size as six files. Nine sizes across a hundred and ten rugs is close to two
+ * thousand files and something like 150 MB — several times the size of the entire
+ * repository, to hold nothing but the same fourteen photographs rearranged. A rug is
+ * four vertices and a JPEG; generating that on request costs a few milliseconds and
+ * the answer is immutable, so it is cached at the edge and built at most once.
  *
- * TO ADD A RUG:
- *   python3 scripts/ar/flatten.py <photo> /tmp/flat.jpg            # add --flat if the
- *                                                                  # photo is already
- *                                                                  # straight-on
- *   python3 scripts/ar/build_models.py /tmp/flat.jpg public/ar/vlr-xxx --size 5x8
+ * WHY THESE FOURTEEN. They are the Plain & Textured rugs, and they are the ones where
+ * a single texture can honestly serve every size. A plain or all-over-textured rug
+ * woven at 9x12 looks like the same wool covering more floor, which is exactly what
+ * stretching one texture across a larger quad shows. A BORDERED OR MEDALLION RUG DOES
+ * NOT WORK THIS WAY — its border stays roughly the same width as the rug grows, so
+ * stretching one texture would thicken the border along with everything else and show
+ * the customer a rug that is not the one they would receive. Extending AR to the
+ * traditional and modern rugs needs either a texture per size or a border-aware
+ * build; it is not a matter of adding codes to the list below.
+ *
+ * TO ADD A PLAIN RUG:
+ *   python3 scripts/ar/flatten.py public/images/catalogue/vlr-xxx.jpg ar-textures/vlr-xxx.jpg
+ *   node scripts/ar/check_models.mjs
  * then add its code below. Nothing else needs changing.
  */
 
-export interface ArModel {
-  /** Rug code, matching data/products.ts or data/catalogue.ts. */
-  code: string
-  /**
-   * The size the models were built at, written for a human. Every model is currently
-   * 5 x 8 ft — the most-ordered size — because one file per rug per size does not
-   * scale to nine sizes across a hundred and ten rugs. Deciding how to offer the other
-   * sizes is the main thing still open on this feature.
-   */
-  size: string
+import { rugSizes } from './sizes'
+
+export const FEET_TO_METRES = 0.3048
+
+/** A size a rug can be shown at, in the form the model builders want. */
+export interface ArSize {
+  /** URL-safe identifier, e.g. "5x8". Appears in the model filename. */
+  id: string
+  /** Human label, e.g. "5 × 8 ft". */
+  label: string
+  widthFt: number
+  lengthFt: number
 }
 
-const MODELS: readonly ArModel[] = [
-  { code: 'VLR-121', size: '5 × 8 ft' },
-  { code: 'VLR-206', size: '5 × 8 ft' },
-  { code: 'VLR-244', size: '5 × 8 ft' },
+/**
+ * Every standard size is offered. There is no per-size cost now that the models are
+ * generated, and size is the entire question AR is here to answer — offering only the
+ * popular ones would leave the customer asking "will 9x12 fit?" with nowhere to look.
+ */
+export const arSizes: ArSize[] = rugSizes.map((size) => ({
+  id: `${size.widthFt}x${size.lengthFt}`,
+  label: size.feetLong,
+  widthFt: size.widthFt,
+  lengthFt: size.lengthFt,
+}))
+
+/** What the sheet opens on: the most-ordered size, and the one the copy quotes. */
+export const defaultArSize = arSizes.find((size) => size.id === '5x8') ?? arSizes[0]!
+
+export function arSizeById(id: string): ArSize | undefined {
+  return arSizes.find((size) => size.id === id)
+}
+
+/**
+ * The rugs with a texture in `ar-textures/`.
+ *
+ * Codes only. Everything else about a rug — its name, its photograph — already lives
+ * in data/catalogue.ts, and duplicating any of it here would just be a second copy to
+ * keep in step.
+ */
+const AR_RUGS: readonly string[] = [
+  'VLR-201',
+  'VLR-202',
+  'VLR-203',
+  'VLR-204',
+  'VLR-205',
+  'VLR-222',
+  'VLR-223',
+  'VLR-224',
+  'VLR-225',
+  'VLR-226',
+  'VLR-227',
+  'VLR-228',
+  'VLR-284',
+  'VLR-287',
 ]
 
-const byCode = new Map(MODELS.map((model) => [model.code, model]))
+const arCodes = new Set(AR_RUGS)
 
-/** The model for a rug, or undefined when it has none yet. */
-export function arModelFor(code: string): ArModel | undefined {
-  return byCode.get(code)
+/** Whether this rug can be shown in a room. False for most of the catalogue. */
+export function hasAr(code: string): boolean {
+  return arCodes.has(code)
 }
 
-/** How many rugs currently have AR. Used by the prototype page's copy. */
-export const arModelCount = MODELS.length
+/** How many rugs currently have AR. Used in copy. */
+export const arRugCount = AR_RUGS.length
+
+/**
+ * The URL of a model. One shape for both formats, because the route parses it back.
+ *
+ * The size is in the path rather than a query string on purpose: AR Quick Look and
+ * Scene Viewer are handed this URL by the operating system, and a path is the thing
+ * every layer between here and there caches without being asked twice.
+ */
+export function arModelUrl(code: string, sizeId: string, format: 'glb' | 'usdz'): string {
+  return `/ar/${code.toLowerCase()}-${sizeId}.${format}`
+}

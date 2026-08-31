@@ -40,3 +40,6 @@ yarn-error.log*
 # lighthouse output
 /.lighthouse/
 tsconfig.tsbuildinfo
+
+# python bytecode from the AR build scripts
+__pycache__/

@@ -14,7 +14,7 @@ import { useEnquiry } from './EnquiryContext'
 import WhatsAppCta from './WhatsAppCta'
 import WhatsAppIcon from './WhatsAppIcon'
 import RugAr from './RugAr'
-import { arModelFor } from '@/data/ar'
+import { hasAr } from '@/data/ar'
 import { rugMessage } from '@/lib/whatsapp'
 import { trackViewContent } from '@/lib/meta-pixel'
 import { sizeRange } from '@/data/sizes'
@@ -53,7 +53,7 @@ export default function FullRange() {
   const close = useCallback(() => setOpenCode(null), [])
 
   /** Undefined for the rugs that have no 3D model yet — most of them. */
-  const arModel = current ? arModelFor(current.code) : undefined
+  const arAvailable = current ? hasAr(current.code) : false
 
   // Paging to another rug must never leave the AR sheet showing the previous one.
   useEffect(() => {
@@ -310,8 +310,8 @@ export default function FullRange() {
                   <WhatsAppIcon size={17} />
                   Enquire on WhatsApp
                 </WhatsAppCta>
-                {/* Only for rugs that actually have a model built. */}
-                {arModel && (
+                {/* Only for rugs that actually have a texture. */}
+                {arAvailable && (
                   <button
                     type="button"
                     className="rm-link"
@@ -351,13 +351,9 @@ export default function FullRange() {
         </div>
       )}
 
-      {arOpen && current && arModel && (
+      {arOpen && current && arAvailable && (
         <RugAr
-          rug={{
-            code: current.code,
-            name: catalogueLabel(current),
-            size: arModel.size,
-          }}
+          rug={{ code: current.code, name: catalogueLabel(current) }}
           onClose={() => setArOpen(false)}
         />
       )}

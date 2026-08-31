@@ -629,25 +629,57 @@ None of these are code. In order:
 
 Things I deliberately left for you rather than inventing:
 
-- **AR — "see it in your room" — is a prototype awaiting a decision.** It lives on the
-  `add-ar-prototype` branch, at `/ar-demo` (hidden from the nav and set to noindex).
-  Three rugs are built end to end: `scripts/ar/flatten.py` un-warps an angled
-  photograph into a flat texture, `scripts/ar/build_models.py` writes the `.glb` for
-  Android and the `.usdz` for iPhone, and `components/RugAr.tsx` puts them in front of
-  a customer. Models are true-to-size and pinch-to-resize is off, because the whole
-  point is answering "will 5x8 fit here?" correctly.
+- **AR — "see it in your room" — is live on the fourteen Plain & Textured rugs.**
+  A customer opens a rug in the Full Range, taps "See it in your room", picks a size
+  and stands it on their own floor at that size. On iPhone and iPad that is AR Quick
+  Look, on Android WebXR or Scene Viewer, and on a desktop an orbitable 3D view.
 
-  Two things to settle before it goes any further. **Size:** everything is built at
-  5x8; nine sizes across 110 rugs is roughly two thousand files and far too much for
-  the repository, so it needs either a short list of offered sizes or generation on
-  request. **The curated twenty:** their photographs are styled room shots and several
-  crop the rug at the frame edge — VLR-01's left corner is outside the picture — and
-  what was never photographed cannot be recovered. Those need reshooting. The 89 Full
-  Range rugs correct automatically, and VLR-121 to VLR-127 need no work at all, their
-  Topshots being flat already.
+  **How a rug gets AR.** One flattened photograph, and that is the whole input:
+
+  ```
+  python3 scripts/ar/flatten.py public/images/catalogue/vlr-xxx.jpg ar-textures/vlr-xxx.jpg
+  npm run ar:check
+  ```
+
+  then add the code to `AR_RUGS` in `data/ar.ts`. `flatten.py` finds the rug's four
+  corners in the photograph and undoes the perspective; the models themselves are
+  written on demand by `app/ar/[file]/route.ts` from that texture and the size asked
+  for, so nothing but the photograph is committed.
+
+  **Why the models are generated rather than stored.** Fourteen rugs across nine sizes
+  in two formats is 252 files; the full catalogue would be nearer two thousand and
+  around 150 MB, several times the size of this repository — all of it derived from the
+  same fourteen photographs. A rug is four vertices and a JPEG, so it is cheaper to
+  compute than to store. Each URL is immutable and served `immutable`, so the CDN builds
+  each one at most once.
+
+  **`npm run ar:check` is the guard.** It builds every rug at every size and asserts the
+  `.usdz` passes `usdchecker --arkit` (Apple's own conformance check), that its entries
+  are uncompressed and 64-byte aligned so Quick Look can memory-map them, and that the
+  vertices are at true metric size. Run it after touching anything under `lib/ar/`,
+  `data/ar.ts` or `ar-textures/`. It needs `usdchecker` on the PATH, which comes with
+  Apple's USD tools.
+
+  **Why only the plain rugs, and what it would take to add the rest.** One texture is
+  stretched to whichever size the customer picks. For a plain or all-over-textured rug
+  that is exactly what the real thing does — more of the same wool. It is NOT true of a
+  bordered or medallion rug: a real border stays roughly the same width as the rug grows,
+  so stretching one texture would thicken the border with it and show a rug that is not
+  the one they would receive. Extending AR to the traditional and modern rugs needs
+  either a texture per size or a border-aware build, and it is that, not the list in
+  `data/ar.ts`, that is the work. (VLR-121 carried AR in the prototype at a single size
+  and no longer does, for exactly this reason — it has a hand-drawn camel border.)
+
+  **The curated twenty are still the hard ones.** Their photographs are styled room
+  shots and several crop the rug at the frame edge — VLR-01's left corner is outside the
+  picture — and what was never photographed cannot be recovered. Those need reshooting.
+  The rug viewer already asks `hasAr()` and will show the button the moment one of them
+  has a texture; none does today, so the button currently appears only in the Full Range.
 
   Testing it needs HTTPS: WebXR and AR Quick Look both refuse to run over plain HTTP,
-  so open a Vercel preview URL on a phone rather than localhost.
+  so open a Vercel preview URL on a phone rather than localhost. **This has been verified
+  on desktop and by conformance check, but not yet on a physical iPhone or Android
+  handset** — that is the one step left, and it needs a preview deploy.
 
 - **Photographs for the Craftsmanship section** — see [section 2b](#2b-replacing-the-craftsmanship-images).
   This is the main outstanding item.

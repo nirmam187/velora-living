@@ -7,7 +7,7 @@ import { useEnquiry } from './EnquiryContext'
 import WhatsAppCta from './WhatsAppCta'
 import WhatsAppIcon from './WhatsAppIcon'
 import RugAr from './RugAr'
-import { arModelFor } from '@/data/ar'
+import { hasAr } from '@/data/ar'
 import { collections } from '@/data/products'
 import { rugMessage } from '@/lib/whatsapp'
 import { trackViewContent } from '@/lib/meta-pixel'
@@ -43,8 +43,8 @@ export default function RugModal() {
   /** Set while the AR sheet is up, so this dialog stops competing with it. */
   const [arOpen, setArOpen] = useState(false)
 
-  /** Undefined for the rugs that have no 3D model yet — most of them. */
-  const arModel = current ? arModelFor(current.code) : undefined
+  /** False for the rugs with no flattened texture yet — most of them. */
+  const arAvailable = current ? hasAr(current.code) : false
 
   // Paging to another rug must start again on its catalogue shot, and must never
   // leave the AR sheet open showing the rug you just paged away from.
@@ -262,9 +262,9 @@ export default function RugModal() {
               <WhatsAppIcon size={17} />
               Enquire on WhatsApp
             </WhatsAppCta>
-            {/* Only for rugs that actually have a model built. A "see it in your
+            {/* Only for rugs that actually have a texture. A "see it in your
                 room" that leads to a missing file is worse than no button. */}
-            {arModel && (
+            {arAvailable && (
               <button
                 type="button"
                 className="rm-link"
@@ -308,9 +308,9 @@ export default function RugModal() {
         </div>
       </div>
 
-      {arOpen && arModel && (
+      {arOpen && arAvailable && (
         <RugAr
-          rug={{ code: current.code, name: current.name, size: arModel.size }}
+          rug={{ code: current.code, name: current.name }}
           onClose={() => setArOpen(false)}
         />
       )}
