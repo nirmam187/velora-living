@@ -677,9 +677,13 @@ Things I deliberately left for you rather than inventing:
   has a texture; none does today, so the button currently appears only in the Full Range.
 
   Testing it needs HTTPS: WebXR and AR Quick Look both refuse to run over plain HTTP,
-  so open a Vercel preview URL on a phone rather than localhost. **This has been verified
-  on desktop and by conformance check, but not yet on a physical iPhone or Android
-  handset** — that is the one step left, and it needs a preview deploy.
+  so open a Vercel preview URL on a phone rather than localhost — a local dev server will
+  not do, and neither will a LAN address.
+
+  **Verified on a real handset**, which is the only test that counts here: the rug places
+  on the floor and holds position, it is the size it says it is, switching size and
+  placing again gives a genuinely different rug rather than a cached one, and
+  pinch-to-resize is refused.
 
 - **Photographs for the Craftsmanship section** — see [section 2b](#2b-replacing-the-craftsmanship-images).
   This is the main outstanding item.
