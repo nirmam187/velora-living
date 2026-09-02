@@ -1,0 +1,12 @@
+# Rugs whose corners automatic detection cannot find, and the corners to use instead.
+#
+# Format: code <tab> TL <tab> TR <tab> BR <tab> BL   (x,y pixel pairs in the source photo)
+#
+# Re-run one of these with:
+#   python3 scripts/ar/flatten.py public/images/catalogue/vlr-207.jpg \
+#     ar-textures/vlr-207.jpg --corners 52,168 524,175 559,858 8,846
+#
+# WHY EACH ONE IS HERE. detect_corners takes the largest connected blob that differs
+# from the border colour. VLR-207 was shot on speckled concrete with stacks of stock in
+# the frame, so the blob it found was the whole photograph rather than the rug.
+vlr-207	52,168	524,175	559,858	8,846

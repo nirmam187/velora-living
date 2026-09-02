@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { arModelUrl, arSizes, defaultArSize, type ArSize } from '@/data/ar'
+import { arModelUrl, arSizes, defaultArSize, isPlainRug, type ArSize } from '@/data/ar'
 import { newEventId, trackPixel } from '@/lib/meta-pixel'
 
 /*
@@ -282,6 +282,14 @@ export default function RugAr({ rug, onClose }: { rug: ArRug; onClose: () => voi
           <p className="ar-caveat">
             Colours on screen are a guide, not an exact match. Ask us for a physical
             sample before you commit.
+            {!isPlainRug(rug.code) && (
+              <>
+                {' '}
+                The size is exact; the pattern is shown at the proportions it was
+                photographed in, so at the largest sizes the border will look wider here
+                than on the woven rug.
+              </>
+            )}
           </p>
         </div>
       </div>

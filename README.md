@@ -629,61 +629,45 @@ None of these are code. In order:
 
 Things I deliberately left for you rather than inventing:
 
-- **AR — "see it in your room" — is live on the fourteen Plain & Textured rugs.**
-  A customer opens a rug in the Full Range, taps "See it in your room", picks a size
-  and stands it on their own floor at that size. On iPhone and iPad that is AR Quick
-  Look, on Android WebXR or Scene Viewer, and on a desktop an orbitable 3D view.
+- **AR — "see it in your room" — is live on 83 of the 112 rugs.**
+  A customer opens a rug, picks a size and stands it on their own floor at that size.
+  iPhone/iPad use AR Quick Look, Android WebXR or Scene Viewer, desktop an orbitable
+  3D view. Models are generated per request by `app/ar/[file]/route.ts` from one
+  flattened photograph per rug; nothing but the photograph is committed.
 
-  **How a rug gets AR.** One flattened photograph, and that is the whole input:
+  **Adding a rug** is one command plus one line:
 
   ```
   python3 scripts/ar/flatten.py public/images/catalogue/vlr-xxx.jpg ar-textures/vlr-xxx.jpg
   npm run ar:check
   ```
 
-  then add the code to `AR_RUGS` in `data/ar.ts`. `flatten.py` finds the rug's four
-  corners in the photograph and undoes the perspective; the models themselves are
-  written on demand by `app/ar/[file]/route.ts` from that texture and the size asked
-  for, so nothing but the photograph is committed.
-
-  **Why the models are generated rather than stored.** Fourteen rugs across nine sizes
-  in two formats is 252 files; the full catalogue would be nearer two thousand and
-  around 150 MB, several times the size of this repository — all of it derived from the
-  same fourteen photographs. A rug is four vertices and a JPEG, so it is cheaper to
-  compute than to store. Each URL is immutable and served `immutable`, so the CDN builds
-  each one at most once.
+  then add the code to `AR_RUGS` in `data/ar.ts`. Add `--flat` if the photograph is
+  already straight-on. If detection fails, pass `--corners` by hand and record them in
+  `scripts/ar/manual-corners.tsv` (VLR-207 is there as the worked example).
 
   **`npm run ar:check` is the guard.** It builds every rug at every size and asserts the
-  `.usdz` passes `usdchecker --arkit` (Apple's own conformance check), that its entries
-  are uncompressed and 64-byte aligned so Quick Look can memory-map them, and that the
-  vertices are at true metric size. Run it after touching anything under `lib/ar/`,
-  `data/ar.ts` or `ar-textures/`. It needs `usdchecker` on the PATH, which comes with
-  Apple's USD tools.
+  `.usdz` passes `usdchecker --arkit`, that entries are uncompressed and 64-byte aligned
+  so Quick Look can memory-map them, and that the vertices are at true metric size.
 
-  **Why only the plain rugs, and what it would take to add the rest.** One texture is
-  stretched to whichever size the customer picks. For a plain or all-over-textured rug
-  that is exactly what the real thing does — more of the same wool. It is NOT true of a
-  bordered or medallion rug: a real border stays roughly the same width as the rug grows,
-  so stretching one texture would thicken the border with it and show a rug that is not
-  the one they would receive. Extending AR to the traditional and modern rugs needs
-  either a texture per size or a border-aware build, and it is that, not the list in
-  `data/ar.ts`, that is the work. (VLR-121 carried AR in the prototype at a single size
-  and no longer does, for exactly this reason — it has a hand-drawn camel border.)
+  **The 29 without AR are a photography problem, not a code one.** Sixteen curated rugs
+  are styled room shots — the rug sits among furniture and several run off the frame.
+  Six catalogue rugs, VLR-268 to VLR-273, were shot at a steep angle on mottled concrete
+  with the near edge outside the frame. What was never photographed cannot be recovered;
+  these need reshooting, straight down and full-bleed, the way VLR-121 to VLR-127 were.
+  The remaining seven are round and oval — the model is a rectangle, so those need a
+  different mesh rather than a different texture.
 
-  **The curated twenty are still the hard ones.** Their photographs are styled room
-  shots and several crop the rug at the frame edge — VLR-01's left corner is outside the
-  picture — and what was never photographed cannot be recovered. Those need reshooting.
-  The rug viewer already asks `hasAr()` and will show the button the moment one of them
-  has a texture; none does today, so the button currently appears only in the Full Range.
+  **One texture, nine sizes — and what it costs.** The geometry is always true to life,
+  so the floor a rug covers is always right. The pattern is an approximation on anything
+  but a plain rug: one photograph is stretched to whichever size is picked, so a bordered
+  rug at 12x15 shows a border thicker than the one that would be woven. The viewer says
+  so, and only for the rugs where it is true — `isPlainRug()` in `data/ar.ts` marks the
+  fourteen where it is not. The proper fix is nine-patch scaling, holding the border band
+  at a fixed width while the field stretches. That is the next piece of work here.
 
-  Testing it needs HTTPS: WebXR and AR Quick Look both refuse to run over plain HTTP,
-  so open a Vercel preview URL on a phone rather than localhost — a local dev server will
-  not do, and neither will a LAN address.
-
-  **Verified on a real handset**, which is the only test that counts here: the rug places
-  on the floor and holds position, it is the size it says it is, switching size and
-  placing again gives a genuinely different rug rather than a cached one, and
-  pinch-to-resize is refused.
+  Testing needs HTTPS: WebXR and AR Quick Look both refuse plain HTTP, so use a
+  deployed URL on a phone rather than localhost. Verified on a real handset.
 
 - **Photographs for the Craftsmanship section** — see [section 2b](#2b-replacing-the-craftsmanship-images).
   This is the main outstanding item.

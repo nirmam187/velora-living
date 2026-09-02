@@ -146,6 +146,15 @@ def perspective_coefficients(
 
 DEFAULT_INSET = 0.03
 
+# JPEG quality for the output texture.
+#
+# This number is paid twice: once in the repository, and once by every customer, because
+# the texture is embedded whole inside each .glb and .usdz the phone downloads. Across
+# the 89 rugs, 88 costs 38 MB and 82 costs 30 MB for a difference invisible on wool seen
+# at arm's length through a camera. `optimize` and `progressive` are free — they change
+# the encoding, not the pixels.
+DEFAULT_QUALITY = 82
+
 
 def inset_quad(
     corners: list[tuple[float, float]],
@@ -206,6 +215,11 @@ def main() -> None:
              f'{DEFAULT_INSET}. Pass 0 to disable — useful when checking a detection.',
     )
     parser.add_argument(
+        '--quality', type=int, default=DEFAULT_QUALITY,
+        help=f'JPEG quality of the output texture. Default {DEFAULT_QUALITY}. Paid for '
+             'twice — in the repository and in every model a customer downloads.',
+    )
+    parser.add_argument(
         '--debug', metavar='FILE',
         help='Also write a copy of the source with the detected corners marked, so a '
              'bad detection is obvious before it reaches a model.',
@@ -227,7 +241,7 @@ def main() -> None:
             new_h = int(round(w / target))
             box = (0, (h - new_h) // 2, w, (h - new_h) // 2 + new_h)
         flat = image.crop(box).resize((args.width, args.height), Image.LANCZOS)
-        flat.save(args.output, quality=88)
+        flat.save(args.output, quality=args.quality, optimize=True, progressive=True)
         print(f'source already flat — cropped {box} and scaled')
         print(f'wrote {args.output}  ({args.width}x{args.height})')
         return
@@ -270,7 +284,7 @@ def main() -> None:
         coefficients,
         Image.BICUBIC,
     )
-    flat.save(args.output, quality=88)
+    flat.save(args.output, quality=args.quality, optimize=True, progressive=True)
     print(f'wrote {args.output}  ({args.width}x{args.height})')
 
 
