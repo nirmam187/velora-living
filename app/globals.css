@@ -1126,3 +1126,10 @@ button.rm-link{
 @media (prefers-reduced-motion: reduce){
   .basket-sheet{ animation:none; }
 }
+
+/* Filtering without re-rendering: the grid carries the chosen filter, each card
+   carries what it is, and the pairing hides the rest. This is what lets all 112
+   cards be server-rendered and still respond to ?style= instantly. */
+.rug-grid[data-filter="traditional"] .rug-card:not([data-style="traditional"]),
+.rug-grid[data-filter="modern"] .rug-card:not([data-style="modern"]),
+.rug-grid[data-filter="plain"] .rug-card:not([data-style="plain"]){ display:none; }

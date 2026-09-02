@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import Breadcrumbs from '@/components/Breadcrumbs'
-import RugBrowser from '@/components/RugBrowser'
+import RugCard from '@/components/RugCard'
+import RugFilter from '@/components/RugFilter'
 import StoreFooter from '@/components/StoreFooter'
 import StoreHeader from '@/components/StoreHeader'
 import { catalogueStyles } from '@/data/catalogue'
@@ -28,6 +29,17 @@ export const metadata: Metadata = {
 }
 
 export default function RugsPage() {
+  const cards = rugs.map((rug, index) => (
+    <RugCard key={rug.code} rug={rug} priority={index < 4} />
+  ))
+
+  // Counted once here rather than in the browser, so the number beside the tabs is
+  // right in the HTML before any JavaScript runs.
+  const counts = catalogueStyles.reduce<Record<string, number>>((acc, style) => {
+    acc[style.id] = rugs.filter((rug) => rug.style === style.id).length
+    return acc
+  }, {})
+
   return (
     <>
       <StoreHeader />
@@ -44,11 +56,20 @@ export default function RugsPage() {
           </header>
 
           {/*
-            useSearchParams needs a Suspense boundary for the page to stay static; without
-            it Next opts the whole route into dynamic rendering.
+            The cards are rendered here, on the server, and passed into the filter as
+            children — so all hundred and twelve are in the static HTML for a crawler
+            and for the first paint. RugFilter only decides which are visible. The
+            Suspense boundary is still required: RugFilter reads the query string, and
+            without it that would opt this whole route into dynamic rendering.
           */}
-          <Suspense fallback={<div className="rug-grid" aria-hidden="true" />}>
-            <RugBrowser rugs={rugs} filters={catalogueStyles} />
+          <Suspense fallback={<div className="rug-grid">{cards}</div>}>
+            <RugFilter
+              filters={catalogueStyles}
+              counts={counts}
+              total={rugs.length}
+            >
+              {cards}
+            </RugFilter>
           </Suspense>
         </div>
       </main>

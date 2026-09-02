@@ -27,7 +27,13 @@ export default function RugCard({
   const photo = rug.photos[0]!
 
   return (
-    <Link href={rug.href} className="rug-card">
+    <Link
+      href={rug.href}
+      className="rug-card"
+      /* What RugFilter filters on. A data attribute rather than a class so the styling
+         hook and the grouping stay separate concerns. */
+      data-style={rug.style ?? rug.collection}
+    >
       <div className="rug-card-shot">
         <Image
           src={photo.src}
