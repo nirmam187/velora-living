@@ -38,7 +38,7 @@ registerHooks({
 
 const { buildGlb } = await import('../../lib/ar/glb.ts')
 const { buildUsdz } = await import('../../lib/ar/usdz.ts')
-const { arSizes, FEET_TO_METRES } = await import('../../data/ar.ts')
+const { arSizes, FEET_TO_METRES, rugShape } = await import('../../data/ar.ts')
 
 const all = process.argv.includes('--all')
 const work = mkdtempSync(join(tmpdir(), 'ar-check-'))
@@ -76,7 +76,7 @@ function inspectZip(bytes, label) {
   return names
 }
 
-function inspectGlb(bytes, label, widthM, lengthM) {
+function inspectGlb(bytes, label, widthM, lengthM, shape) {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
   if (view.getUint32(0, true) !== 0x46546c67) return fail(label, 'not a glTF magic')
   if (view.getUint32(4, true) !== 2) return fail(label, 'not glTF version 2')
@@ -93,6 +93,13 @@ function inspectGlb(bytes, label, widthM, lengthM) {
   }
   if (json.images[0].mimeType !== 'image/jpeg') fail(label, 'texture is not a jpeg')
   if (!json.materials[0].doubleSided) fail(label, 'material is not double-sided')
+
+  // A rectangle is 4 vertices; an ellipse is a fan of RIM_SEGMENTS + 1. Getting this
+  // wrong would ship a round rug as a rectangle, which is exactly the fault the
+  // elliptical mesh exists to prevent — and it would look plausible in a thumbnail.
+  const vertices = accessor.count
+  if (shape === 'rect' && vertices !== 4) fail(label, `rect mesh has ${vertices} vertices, expected 4`)
+  if (shape === 'ellipse' && vertices < 32) fail(label, `ellipse mesh has only ${vertices} vertices`)
 }
 
 const sizes = all ? arSizes : arSizes.filter((s) => s.id === '5x8')
@@ -105,9 +112,17 @@ for (const file of textures) {
     const lengthM = +(size.lengthFt * FEET_TO_METRES).toFixed(6)
     const label = `${stem} ${size.id}`
 
-    inspectGlb(buildGlb({ widthM, lengthM, texture, name: stem.toUpperCase() }), label, widthM, lengthM)
+    const shape = rugShape(stem.toUpperCase())
 
-    const usdz = buildUsdz({ widthM, lengthM, texture, name: stem.toUpperCase(), stem })
+    inspectGlb(
+      buildGlb({ widthM, lengthM, texture, name: stem.toUpperCase(), shape }),
+      label,
+      widthM,
+      lengthM,
+      shape,
+    )
+
+    const usdz = buildUsdz({ widthM, lengthM, texture, name: stem.toUpperCase(), stem, shape })
     inspectZip(usdz, label)
     const path = join(work, `${stem}-${size.id}.usdz`)
     writeFileSync(path, usdz)
@@ -132,4 +147,8 @@ if (failures.length) {
   for (const line of failures) console.error(`  ✗ ${line}`)
   process.exit(1)
 }
-console.log(`✓ ${checked} model pair(s) across ${textures.length} rug(s) — usdchecker --arkit clean, 64-byte aligned, true to size`)
+const ellipses = textures.filter((f) => rugShape(f.replace(/\.jpg$/, '').toUpperCase()) === 'ellipse').length
+console.log(
+  `✓ ${checked} model pair(s) across ${textures.length} rug(s) ` +
+    `(${ellipses} elliptical) — usdchecker --arkit clean, 64-byte aligned, true to size`,
+)

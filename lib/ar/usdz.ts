@@ -21,6 +21,8 @@
  * scripts/ar/check_route.mjs.
  */
 
+import { RIM_SEGMENTS, type RugShape } from './glb'
+
 const CRC_TABLE = (() => {
   const table = new Uint32Array(256)
   for (let n = 0; n < 256; n++) {
@@ -44,12 +46,58 @@ function crc32(bytes: Uint8Array): number {
  * the opposite of glTF's. Both files describe the same rug the same way up; only the
  * numbering differs.
  */
-function usda(name: string, texture: string, halfW: number, halfL: number): string {
+function usda(
+  name: string,
+  texture: string,
+  halfW: number,
+  halfL: number,
+  shape: RugShape,
+): string {
   const n = (value: number) => value.toFixed(6)
   const nx = n(-halfW)
   const px = n(halfW)
   const nz = n(-halfL)
   const pz = n(halfL)
+
+  /*
+    The rug's outline.
+
+    A rectangle is one four-sided face. An ellipse is one N-sided face — USD takes an
+    n-gon directly, so there is no fan and no centre vertex to keep in step with glTF's.
+    That is safe here for the same reason it is safe there: u depends only on x and v
+    only on z, linearly, so however Quick Look triangulates the polygon the texture lands
+    in the same place.
+
+    Note the texture coordinates against glb.ts: USD's `st` origin is the BOTTOM-left,
+    the opposite of glTF's. Both files describe the same rug the same way up; only the
+    numbering differs, which is why v is flipped below and not in glb.ts.
+  */
+  let counts: string
+  let indices: string
+  let points: string
+  let normals: string
+  let uvs: string
+
+  if (shape === 'rect') {
+    counts = '4'
+    indices = '0, 1, 2, 3'
+    points = `(${nx}, 0, ${pz}), (${px}, 0, ${pz}), (${px}, 0, ${nz}), (${nx}, 0, ${nz})`
+    normals = '(0, 1, 0), (0, 1, 0), (0, 1, 0), (0, 1, 0)'
+    uvs = '(0, 0), (1, 0), (1, 1), (0, 1)'
+  } else {
+    const segments = RIM_SEGMENTS
+    const rim = Array.from({ length: segments }, (_, i) => {
+      const angle = (i / segments) * Math.PI * 2
+      return { cos: Math.cos(angle), sin: Math.sin(angle) }
+    })
+    counts = String(segments)
+    indices = rim.map((_, i) => i).join(', ')
+    points = rim.map((r) => `(${n(halfW * r.cos)}, 0, ${n(halfL * r.sin)})`).join(', ')
+    normals = rim.map(() => '(0, 1, 0)').join(', ')
+    // v flipped relative to glb.ts, because USD counts st from the bottom.
+    uvs = rim.map((r) => `(${n(0.5 + 0.5 * r.cos)}, ${n(0.5 - 0.5 * r.sin)})`).join(', ')
+  }
+
   return `#usda 1.0
 (
     defaultPrim = "Rug"
@@ -68,13 +116,13 @@ def Xform "Rug" (
     {
         uniform bool doubleSided = 1
         float3[] extent = [(${nx}, 0, ${nz}), (${px}, 0, ${pz})]
-        int[] faceVertexCounts = [4]
-        int[] faceVertexIndices = [0, 1, 2, 3]
-        point3f[] points = [(${nx}, 0, ${pz}), (${px}, 0, ${pz}), (${px}, 0, ${nz}), (${nx}, 0, ${nz})]
-        normal3f[] primvars:normals = [(0, 1, 0), (0, 1, 0), (0, 1, 0), (0, 1, 0)] (
+        int[] faceVertexCounts = [${counts}]
+        int[] faceVertexIndices = [${indices}]
+        point3f[] points = [${points}]
+        normal3f[] primvars:normals = [${normals}] (
             interpolation = "vertex"
         )
-        texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1)] (
+        texCoord2f[] primvars:st = [${uvs}] (
             interpolation = "vertex"
         )
         uniform token subdivisionScheme = "none"
@@ -225,11 +273,20 @@ export interface UsdzModel {
   name: string
   /** Base filename inside the archive, without extension. */
   stem: string
+  /** Rectangle by default; 'ellipse' for the round and oval rugs. */
+  shape?: RugShape
 }
 
-export function buildUsdz({ widthM, lengthM, texture, name, stem }: UsdzModel): Uint8Array {
+export function buildUsdz({
+  widthM,
+  lengthM,
+  texture,
+  name,
+  stem,
+  shape = 'rect',
+}: UsdzModel): Uint8Array {
   const textureName = `${stem}.jpg`
-  const scene = usda(name, textureName, widthM / 2, lengthM / 2)
+  const scene = usda(name, textureName, widthM / 2, lengthM / 2, shape)
   return zipStored([
     // The .usda first — rule 3.
     { name: `${stem}.usda`, bytes: new TextEncoder().encode(scene) },

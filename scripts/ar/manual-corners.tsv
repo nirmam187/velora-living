@@ -10,3 +10,8 @@
 # from the border colour. VLR-207 was shot on speckled concrete with stacks of stock in
 # the frame, so the blob it found was the whole photograph rather than the rug.
 vlr-207	52,168	524,175	559,858	8,846
+# The two ovals whose floor is covered in white plastic sheeting. The largest blob is
+# then the sheeting rather than the rug, so --shape ellipse fits the sheet. Corners are
+# given with the rug's MAJOR axis mapped to the output's long side, as ellipse_quad does.
+vlr-210	8,18	14,506	834,502	828,20
+vlr-219	6,30	12,506	832,500	826,34

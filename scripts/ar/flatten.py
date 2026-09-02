@@ -144,6 +144,82 @@ def perspective_coefficients(
     return tuple(np.linalg.solve(a, b))
 
 
+def ellipse_quad(image: Image.Image) -> list[tuple[float, float]]:
+    """
+    Finds the bounding parallelogram of a ROUND or OVAL rug.
+
+    Corner detection is no use here. It works by taking the extremes of x+y and x-y,
+    which on an ellipse lands on four tangent points rather than four corners — feed
+    those to the un-warp and the rug is sheared into a diamond.
+
+    So the rug is measured instead of cornered. The mask's second moments give the
+    centroid and the two principal axes of whatever shape it is; for a filled ellipse
+    the variance along an axis is a quarter of the semi-axis squared, so the semi-axes
+    fall straight out of the eigenvalues. The quad returned is the parallelogram that
+    just touches the ellipse along those axes, which is exactly the region the texture
+    needs: un-warped to a rectangle, the rug becomes the ellipse inscribed in it, and
+    the mesh in lib/ar/glb.ts samples nothing outside that.
+
+    Returned MAJOR AXIS FIRST — the long side of the rug maps to the long side of the
+    texture. Without that, a landscape oval photographed on the floor would be squeezed
+    into a portrait model and the pattern stretched the wrong way.
+
+    This is an affine fit: it does not model the perspective foreshortening that makes
+    the near half of a tilted rug bigger than the far half. On these warehouse shots,
+    taken from standing height at a moderate angle, the residual is small — and far
+    smaller than the shear that cornering an ellipse produces.
+    """
+    small = image.convert('RGB')
+    scale = 4
+    w, h = small.size
+    small = small.resize((w // scale, h // scale), Image.BILINEAR)
+    pixels = np.asarray(small).astype(np.int16)
+
+    brightness = pixels.mean(axis=2)
+    saturation = pixels.max(axis=2) - pixels.min(axis=2)
+    edge = np.concatenate([
+        brightness[0, :], brightness[-1, :], brightness[:, 0], brightness[:, -1],
+    ])
+    background = float(np.median(edge))
+    mask = (np.abs(brightness - background) > 18) | (saturation > 34)
+
+    closed = ndimage.binary_closing(mask, structure=np.ones((5, 5)))
+    labels, count = ndimage.label(closed)
+    if count == 0:
+        raise SystemExit('Nothing found to measure. Pass --corners by hand.')
+    sizes = ndimage.sum(closed, labels, range(1, count + 1))
+    mask = labels == (int(np.argmax(sizes)) + 1)
+    # Fill the middle: a pale field inside a dark border can leave the centre unmasked,
+    # and a ring has completely different moments from the disc it should be.
+    mask = ndimage.binary_fill_holes(mask)
+
+    ys, xs = np.nonzero(mask)
+    if ys.size < 50:
+        raise SystemExit('Rug outline too sparse to trust. Pass --corners by hand.')
+
+    cx, cy = xs.mean(), ys.mean()
+    cov = np.cov(np.vstack([xs - cx, ys - cy]))
+    values, vectors = np.linalg.eigh(cov)
+    order = np.argsort(values)[::-1]            # major axis first
+    values, vectors = values[order], vectors[:, order]
+    # Semi-axis of a filled ellipse is twice the standard deviation along that axis.
+    semi = 2.0 * np.sqrt(np.maximum(values, 1e-9))
+
+    major = vectors[:, 0] * semi[0]
+    minor = vectors[:, 1] * semi[1]
+    centre = np.array([cx, cy])
+
+    # Ordered so the MAJOR axis runs down the output image: TL TR BR BL with the
+    # major axis vertical.
+    corners = [
+        centre - major - minor,
+        centre - major + minor,
+        centre + major + minor,
+        centre + major - minor,
+    ]
+    return [(float(x * scale), float(y * scale)) for x, y in corners]
+
+
 DEFAULT_INSET = 0.03
 
 # JPEG quality for the output texture.
@@ -209,6 +285,20 @@ def main() -> None:
              'aspect ratio, which keeps every pixel of an image that needs no repair.',
     )
     parser.add_argument(
+        '--crop', metavar='L,T,R,B',
+        help='Trim the source to this pixel box before doing anything else. These are '
+             'warehouse photographs: several have stacked stock, a doorway or a pair of '
+             'legs at the frame edge, and anything that is not floor competes with the '
+             'rug for the largest-blob test. Cropping it away is more honest than '
+             'tuning a threshold until it goes away.',
+    )
+    parser.add_argument(
+        '--shape', choices=('rect', 'ellipse'), default='rect',
+        help='Rug outline. "ellipse" fits the rug as an oval and returns the '
+             'parallelogram around it, so the texture holds the rug inscribed. Use it '
+             'for every round and oval rug — cornering an ellipse shears it.',
+    )
+    parser.add_argument(
         '--inset', type=float, default=DEFAULT_INSET,
         help='Pull the detected corners this fraction towards the centre before '
              'un-warping, to keep background out of the texture. Default '
@@ -227,6 +317,11 @@ def main() -> None:
     args = parser.parse_args()
 
     image = Image.open(args.source).convert('RGB')
+
+    if args.crop:
+        left, top, right, bottom = (int(v) for v in args.crop.split(','))
+        image = image.crop((left, top, right, bottom))
+        print(f'cropped to {image.size[0]}x{image.size[1]}')
 
     if args.flat:
         # Centre-crop to the target ratio, then scale. Cropping rather than stretching:
@@ -252,6 +347,9 @@ def main() -> None:
             x, _, y = pair.partition(',')
             corners.append((float(x), float(y)))
         origin = 'given'
+    elif args.shape == 'ellipse':
+        corners = ellipse_quad(image)
+        origin = 'fitted (ellipse)'
     else:
         corners = detect_corners(image)
         origin = 'detected'

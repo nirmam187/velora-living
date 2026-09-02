@@ -88,6 +88,13 @@ export function arSizeById(id: string): ArSize | undefined {
  * keep in step.
  */
 const AR_RUGS: readonly string[] = [
+  'VLR-208',
+  'VLR-209',
+  'VLR-210',
+  'VLR-213',
+  'VLR-216',
+  'VLR-219',
+  'VLR-221',
   'VLR-201',
   'VLR-202',
   'VLR-203',
@@ -210,6 +217,31 @@ const PLAIN = new Set<string>([
 
 export function isPlainRug(code: string): boolean {
   return PLAIN.has(code)
+}
+
+/**
+ * The rugs that are not rectangles.
+ *
+ * The catalogue calls three of these "Round" and four "Oval", but every photograph shows
+ * an ellipse — the descriptions are loose, and a true circle would just be an ellipse
+ * with equal axes anyway. So they are all modelled as ellipses inscribed in the chosen
+ * size, which also means they can use the same nine sizes as everything else: an oval
+ * rug is sold as width by length exactly like a rectangular one.
+ */
+const ELLIPSE = new Set<string>([
+  'VLR-208',
+  'VLR-209',
+  'VLR-210',
+  'VLR-213',
+  'VLR-216',
+  'VLR-219',
+  'VLR-221',
+])
+
+export type RugShape = 'rect' | 'ellipse'
+
+export function rugShape(code: string): RugShape {
+  return ELLIPSE.has(code) ? 'ellipse' : 'rect'
 }
 
 /**

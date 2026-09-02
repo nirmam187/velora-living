@@ -19,6 +19,19 @@ function pad(length: number, alignment = 4): number {
   return remainder === 0 ? 0 : alignment - remainder
 }
 
+export type RugShape = 'rect' | 'ellipse'
+
+/**
+ * How many segments an elliptical rug's rim is drawn with.
+ *
+ * The rim is the whole silhouette of a round rug, so this is the number that decides
+ * whether it reads as an oval or as a polygon on someone's floor. 96 puts a vertex
+ * every 3.75 degrees — on a 12 ft rug that is a chord sagging under 3 mm from the true
+ * curve, well below what a phone camera resolves at room distance. The cost is 97
+ * vertices, which against a 250 kB texture is nothing.
+ */
+export const RIM_SEGMENTS = 96
+
 export interface QuadModel {
   /** Rug width in metres — the short side, laid along X. */
   widthM: number
@@ -28,6 +41,58 @@ export interface QuadModel {
   texture: Uint8Array
   /** Name recorded on the mesh and node. */
   name: string
+  /** Rectangle by default; 'ellipse' for the round and oval rugs. */
+  shape?: RugShape
+}
+
+/**
+ * The mesh for a rug, in whichever shape it is.
+ *
+ * BOTH SHAPES SHARE ONE TEXTURE MAPPING, and that is what makes this simple: u depends
+ * only on x and v only on z, linearly. Because the map is affine, it does not matter how
+ * a renderer triangulates the polygon — every triangulation gives the same picture — and
+ * an oval rug is just the rectangle's inscribed ellipse sampling the same texture. The
+ * flattener puts the rug exactly there (see --shape ellipse in scripts/ar/flatten.py), so
+ * the background left in the texture's corners is never sampled.
+ */
+function mesh(halfW: number, halfL: number, shape: RugShape) {
+  if (shape === 'rect') {
+    return {
+      positions: [
+        [-halfW, 0, halfL],
+        [halfW, 0, halfL],
+        [halfW, 0, -halfL],
+        [-halfW, 0, -halfL],
+      ],
+      // glTF's texture origin is the TOP-left, so v runs down the image as z runs away
+      // from the viewer. (USD numbers this axis the other way round — see usdz.ts.)
+      uvs: [
+        [0, 1],
+        [1, 1],
+        [1, 0],
+        [0, 0],
+      ],
+      indices: [0, 1, 2, 0, 2, 3],
+    }
+  }
+
+  // A triangle fan: the centre, then the rim. The centre vertex is what keeps every
+  // triangle thin and well-shaped; fanning from a rim vertex instead would give slivers
+  // on the far side that shade badly under a moving light.
+  const positions: number[][] = [[0, 0, 0]]
+  const uvs: number[][] = [[0.5, 0.5]]
+  for (let i = 0; i < RIM_SEGMENTS; i++) {
+    const angle = (i / RIM_SEGMENTS) * Math.PI * 2
+    const cos = Math.cos(angle)
+    const sin = Math.sin(angle)
+    positions.push([halfW * cos, 0, halfL * sin])
+    uvs.push([0.5 + 0.5 * cos, 0.5 + 0.5 * sin])
+  }
+  const indices: number[] = []
+  for (let i = 1; i <= RIM_SEGMENTS; i++) {
+    indices.push(0, i, i === RIM_SEGMENTS ? 1 : i + 1)
+  }
+  return { positions, uvs, indices }
 }
 
 /**
@@ -35,32 +100,18 @@ export interface QuadModel {
  * expect of something that sits on the floor. It is drawn double-sided so a customer
  * crouching to look along the pile does not see straight through it.
  */
-export function buildGlb({ widthM, lengthM, texture, name }: QuadModel): Uint8Array {
+export function buildGlb({
+  widthM,
+  lengthM,
+  texture,
+  name,
+  shape = 'rect',
+}: QuadModel): Uint8Array {
   const halfW = widthM / 2
   const halfL = lengthM / 2
 
-  // Four corners, counter-clockwise seen from above.
-  const positions = [
-    [-halfW, 0, halfL],
-    [halfW, 0, halfL],
-    [halfW, 0, -halfL],
-    [-halfW, 0, -halfL],
-  ]
-  const normals = [
-    [0, 1, 0],
-    [0, 1, 0],
-    [0, 1, 0],
-    [0, 1, 0],
-  ]
-  // glTF's texture origin is the TOP-left, so v runs down the image as z runs away
-  // from the viewer. (USD numbers this axis the other way round — see usdz.ts.)
-  const uvs = [
-    [0, 1],
-    [1, 1],
-    [1, 0],
-    [0, 0],
-  ]
-  const indices = [0, 1, 2, 0, 2, 3]
+  const { positions, uvs, indices } = mesh(halfW, halfL, shape)
+  const normals = positions.map(() => [0, 1, 0])
 
   const f32 = (rows: number[][]) => {
     const out = new Uint8Array(rows.length * rows[0]!.length * 4)
@@ -150,14 +201,14 @@ export function buildGlb({ widthM, lengthM, texture, name }: QuadModel): Uint8Ar
       {
         bufferView: 0,
         componentType: 5126,
-        count: 4,
+        count: positions.length,
         type: 'VEC3',
         min: [-halfW, 0, -halfL],
         max: [halfW, 0, halfL],
       },
-      { bufferView: 1, componentType: 5126, count: 4, type: 'VEC3' },
-      { bufferView: 2, componentType: 5126, count: 4, type: 'VEC2' },
-      { bufferView: 3, componentType: 5123, count: 6, type: 'SCALAR' },
+      { bufferView: 1, componentType: 5126, count: normals.length, type: 'VEC3' },
+      { bufferView: 2, componentType: 5126, count: uvs.length, type: 'VEC2' },
+      { bufferView: 3, componentType: 5123, count: indices.length, type: 'SCALAR' },
     ],
     bufferViews: views,
     buffers: [{ byteLength: blobLength }],

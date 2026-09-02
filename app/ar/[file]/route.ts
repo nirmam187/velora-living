@@ -22,7 +22,7 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { NextResponse } from 'next/server'
-import { FEET_TO_METRES, arSizeById, hasAr } from '@/data/ar'
+import { FEET_TO_METRES, arSizeById, hasAr, rugShape } from '@/data/ar'
 import { buildGlb } from '@/lib/ar/glb'
 import { buildUsdz } from '@/lib/ar/usdz'
 
@@ -88,10 +88,14 @@ export async function GET(
   const lengthM = +(size.lengthFt * FEET_TO_METRES).toFixed(6)
   const name = `${code} — ${size.label}`
 
+  // Round and oval rugs get an elliptical mesh inscribed in the same box. See
+  // data/ar.ts for why they are all ellipses rather than some of them circles.
+  const shape = rugShape(code)
+
   const model =
     format === 'glb'
-      ? buildGlb({ widthM, lengthM, texture, name })
-      : buildUsdz({ widthM, lengthM, texture, name, stem: `${slug}-${size.id}` })
+      ? buildGlb({ widthM, lengthM, texture, name, shape })
+      : buildUsdz({ widthM, lengthM, texture, name, stem: `${slug}-${size.id}`, shape })
 
   // NextResponse's body type is the DOM one, which does not admit a Uint8Array even
   // though the Node runtime accepts it happily. Handing over the underlying buffer
