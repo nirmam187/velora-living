@@ -629,7 +629,7 @@ None of these are code. In order:
 
 Things I deliberately left for you rather than inventing:
 
-- **AR — "see it in your room" — is live on 83 of the 112 rugs.**
+- **AR — "see it in your room" — is live on 90 of the 112 rugs.**
   A customer opens a rug, picks a size and stands it on their own floor at that size.
   iPhone/iPad use AR Quick Look, Android WebXR or Scene Viewer, desktop an orbitable
   3D view. Models are generated per request by `app/ar/[file]/route.ts` from one
@@ -650,13 +650,20 @@ Things I deliberately left for you rather than inventing:
   `.usdz` passes `usdchecker --arkit`, that entries are uncompressed and 64-byte aligned
   so Quick Look can memory-map them, and that the vertices are at true metric size.
 
-  **The 29 without AR are a photography problem, not a code one.** Sixteen curated rugs
+  **Round and oval rugs are ellipses.** Seven of them. The catalogue calls three "Round"
+  and four "Oval", but every photograph shows an ellipse, so they are all modelled that
+  way — inscribed in the chosen size, which lets them use the same nine sizes as
+  everything else, an oval being sold as width by length like any other rug. The mesh is
+  a 96-segment fan (`RIM_SEGMENTS` in `lib/ar/glb.ts`), and the flattener finds them with
+  `--shape ellipse`, which fits the rug's principal axes rather than cornering it:
+  corner detection lands on four tangent points of an ellipse and shears it into a
+  diamond. The background left in the texture's corners is never sampled.
+
+  **The 22 without AR are a photography problem, not a code one.** Sixteen curated rugs
   are styled room shots — the rug sits among furniture and several run off the frame.
   Six catalogue rugs, VLR-268 to VLR-273, were shot at a steep angle on mottled concrete
   with the near edge outside the frame. What was never photographed cannot be recovered;
   these need reshooting, straight down and full-bleed, the way VLR-121 to VLR-127 were.
-  The remaining seven are round and oval — the model is a rectangle, so those need a
-  different mesh rather than a different texture.
 
   **One texture, nine sizes — and what it costs.** The geometry is always true to life,
   so the floor a rug covers is always right. The pattern is an approximation on anything
