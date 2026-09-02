@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
+import BasketButton from './BasketButton'
 import WhatsAppCta from './WhatsAppCta'
 import WhatsAppIcon from './WhatsAppIcon'
 
@@ -57,6 +58,7 @@ export default function StoreHeader() {
         </nav>
 
         <div className="nav-icons">
+          <BasketButton />
           <WhatsAppCta className="cta-btn gold wa-btn">
             <WhatsAppIcon size={16} />
             <span className="wa-btn-text">Chat on WhatsApp</span>

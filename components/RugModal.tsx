@@ -6,6 +6,7 @@ import { useRugViewer } from './RugViewerContext'
 import { useEnquiry } from './EnquiryContext'
 import WhatsAppCta from './WhatsAppCta'
 import WhatsAppIcon from './WhatsAppIcon'
+import AddToBasket from './AddToBasket'
 import RugAr from './RugAr'
 import { hasAr } from '@/data/ar'
 import { collections } from '@/data/products'
@@ -267,6 +268,15 @@ export default function RugModal() {
               <WhatsAppIcon size={17} />
               Enquire on WhatsApp
             </WhatsAppCta>
+            <AddToBasket
+              rug={{
+                code: current.code,
+                name: current.name,
+                href: `/rugs/${current.code.toLowerCase()}`,
+                image: current.image,
+                alt: current.alt,
+              }}
+            />
             {/* Only for rugs that actually have a texture. A "see it in your
                 room" that leads to a missing file is worse than no button. */}
             {arAvailable && (

@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import AddToBasket from './AddToBasket'
 import RugAr from './RugAr'
 import WhatsAppCta from './WhatsAppCta'
 import WhatsAppIcon from './WhatsAppIcon'
@@ -137,6 +138,16 @@ export default function RugDetail({ rug, url }: { rug: RugView; url: string }) {
               <WhatsAppIcon size={17} />
               Enquire on WhatsApp
             </WhatsAppCta>
+
+            <AddToBasket
+              rug={{
+                code: rug.code,
+                name: rug.name,
+                href: rug.href,
+                image: rug.photos[0]!.src,
+                alt: rug.photos[0]!.alt,
+              }}
+            />
 
             {rug.ar && (
               <button type="button" className="rm-link" onClick={() => setArOpen(true)}>

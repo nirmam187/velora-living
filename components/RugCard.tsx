@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import AddToBasket from './AddToBasket'
 import type { RugView } from '@/data/rugs'
 
 /**
@@ -41,6 +42,16 @@ export default function RugCard({
             In your room
           </span>
         )}
+        <AddToBasket
+          compact
+          rug={{
+            code: rug.code,
+            name: rug.name,
+            href: rug.href,
+            image: photo.src,
+            alt: photo.alt,
+          }}
+        />
       </div>
       <div className="rug-card-body">
         <span className="num">{rug.code}</span>

@@ -1025,3 +1025,104 @@ button.rm-link{
   .collection-cards{ grid-template-columns:1fr; }
   .store-foot{ grid-template-columns:1fr; gap:22px; }
 }
+
+/* ---------------------------------------------------------------------------
+   THE ENQUIRY LIST
+   This shop's cart. No prices are published, so it collects rugs and sizes and
+   ends in one WhatsApp message rather than a checkout — but it wears the
+   affordances of a cart, because those are the ones shoppers already know.
+   --------------------------------------------------------------------------- */
+
+.basket-btn{
+  position:relative; display:inline-flex; align-items:center; gap:6px;
+  padding:9px 13px; border:1px solid var(--line); border-radius:2px;
+  background:var(--cream); color:var(--ink); cursor:pointer; font-family:inherit;
+  transition:border-color 0.2s ease, color 0.2s ease;
+}
+.basket-btn:hover{ border-color:var(--gold); color:var(--gold); }
+.basket-count{ font-size:0.76rem; letter-spacing:0.04em; font-weight:500; }
+
+.basket-sheet{
+  position:fixed; inset:0; z-index:240;
+  display:flex; justify-content:flex-end;
+  background:rgba(26,24,21,0.5); backdrop-filter:blur(3px);
+  animation:rm-fade 0.2s ease;
+}
+.basket-panel{
+  position:relative; width:min(420px, 100%); height:100%;
+  display:flex; flex-direction:column;
+  background:var(--cream); border-left:1px solid var(--line);
+}
+.basket-head{
+  display:flex; align-items:flex-start; justify-content:space-between; gap:14px;
+  padding:22px 22px 16px; border-bottom:1px solid var(--line);
+}
+.basket-head h2{ font-size:1.15rem; }
+.basket-head p{ font-size:0.78rem; color:var(--ink-soft); margin-top:4px; }
+/* The shared close button is absolutely positioned for the rug viewer; in this
+   header it is a flow item, so that positioning is undone rather than duplicated. */
+.basket-panel .rm-close{ position:static; flex:none; }
+
+.basket-empty{ padding:34px 22px; display:flex; flex-direction:column; gap:16px; align-items:flex-start; }
+.basket-empty p{ font-size:0.88rem; color:var(--ink-soft); }
+
+.basket-items{ list-style:none; margin:0; padding:8px 0; overflow-y:auto; flex:1 1 auto; }
+.basket-items li{
+  display:grid; grid-template-columns:84px 1fr auto; gap:13px; align-items:start;
+  padding:14px 22px; border-bottom:1px solid var(--line);
+}
+.basket-item-shot{ position:relative; width:84px; aspect-ratio:1/1; background:var(--cream-deep); border:1px solid var(--line); }
+.basket-item-shot img{ object-fit:cover; }
+.basket-item-body{ min-width:0; }
+.basket-item-body .num{ font-size:0.6rem; letter-spacing:0.18em; color:var(--gold); }
+.basket-item-body a{ text-decoration:none; }
+.basket-item-body h3{ font-size:0.95rem; line-height:1.25; margin:2px 0 8px; }
+.basket-item-body a:hover h3{ color:var(--gold); }
+.basket-size{ display:flex; flex-direction:column; gap:4px; }
+.basket-size span{ font-size:0.6rem; letter-spacing:0.16em; text-transform:uppercase; color:var(--ink-soft); }
+.basket-size select{
+  font-family:inherit; font-size:0.78rem; padding:6px 8px; width:100%;
+  border:1px solid var(--line); background:var(--cream); color:var(--ink); border-radius:2px;
+}
+.basket-size select:focus-visible{ outline:2px solid var(--gold); outline-offset:1px; }
+.basket-remove{
+  background:none; border:none; cursor:pointer; font-size:0.85rem; line-height:1;
+  color:var(--ink-soft); padding:4px;
+}
+.basket-remove:hover{ color:var(--gold); }
+
+.basket-foot{
+  padding:18px 22px 24px; border-top:1px solid var(--line);
+  display:flex; flex-direction:column; gap:12px; align-items:flex-start;
+  background:var(--cream-deep);
+}
+.basket-foot .cta-btn{ width:100%; justify-content:center; }
+.basket-clear{
+  background:none; border:none; padding:0; cursor:pointer; font-family:inherit;
+  font-size:0.76rem; color:var(--ink-soft); text-decoration:underline;
+}
+.basket-clear:hover{ color:var(--gold); }
+
+/* The square quick-add on a grid card. Sits opposite the AR flag. */
+.card-add{
+  position:absolute; right:8px; bottom:8px; z-index:2;
+  width:30px; height:30px; display:grid; place-items:center;
+  border:1px solid rgba(245,240,230,0.5); border-radius:999px;
+  background:rgba(26,24,21,0.72); color:var(--cream);
+  font-size:0.95rem; line-height:1; cursor:pointer; font-family:inherit;
+  transition:background 0.2s ease, border-color 0.2s ease;
+}
+.card-add:hover{ background:var(--gold); border-color:var(--gold); color:var(--ink); }
+.card-add.is-added{ background:var(--gold); border-color:var(--gold); color:var(--ink); }
+.card-add:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+
+.basket-add{ white-space:nowrap; }
+
+@media (max-width: 560px){
+  .basket-panel{ width:100%; border-left:none; }
+  /* The floating WhatsApp button would otherwise sit on top of the drawer's CTA. */
+  .basket-sheet ~ .wa-float{ display:none; }
+}
+@media (prefers-reduced-motion: reduce){
+  .basket-sheet{ animation:none; }
+}

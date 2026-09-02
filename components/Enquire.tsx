@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import Reveal from './Reveal'
 import { collections, productByCode, productsIn } from '@/data/products'
 import { catalogueLabel, catalogueStyles, catalogueIn, rugByCode } from '@/data/catalogue'
@@ -33,6 +33,56 @@ export default function Enquire() {
 
   const selected = rugCode ? rugByCode(rugCode) : undefined
   const sending = status.kind === 'sending'
+
+  /*
+    Arriving from the enquiry list, via /?list=VLR-201,VLR-119#enquire.
+
+    The drawer lives in the root layout so the list works on every page, which puts it
+    outside this form's EnquiryProvider — there is no shared context to hand the rugs
+    over in, so the URL is the handoff.
+
+    Read from window.location rather than useSearchParams on purpose: the home page is
+    statically rendered, and useSearchParams would opt the whole of `/` into dynamic
+    rendering for a prefill that only matters after hydration anyway.
+
+    The API stores one rug code against an enquiry, so the first rug goes in that field
+    and all of them go into the message, which is what the studio actually reads. It
+    only ever fills an untouched form: overwriting something the visitor has already
+    typed would be worse than not prefilling at all.
+  */
+  useEffect(() => {
+    // Each entry is "CODE" or "CODE:size label".
+    const entries = new URLSearchParams(window.location.search)
+      .get('list')
+      ?.split(',')
+      .map((entry) => entry.trim())
+      .filter(Boolean)
+      .map((entry) => {
+        const at = entry.indexOf(':')
+        return at === -1
+          ? { code: entry, sizeLabel: undefined as string | undefined }
+          : { code: entry.slice(0, at), sizeLabel: entry.slice(at + 1) }
+      })
+    if (!entries?.length) return
+
+    const codes = entries.map((entry) => entry.code)
+    const named = entries.map((entry) => {
+      const rug = rugByCode(entry.code)
+      const label = rug ? `${rug.label} (${rug.code})` : entry.code
+      return entry.sizeLabel ? `${label} — ${entry.sizeLabel}` : label
+    })
+
+    // Runs once on mount, when the form is still untouched, so this cannot clobber a
+    // rug the visitor picked themselves. (setRugCode takes a value, not an updater.)
+    setRugCode(codes[0]!)
+    setMessage((current) =>
+      current
+        ? current
+        : `I'd like a quote for ${named.length === 1 ? 'this rug' : `these ${named.length} rugs`}:\n\n${named
+            .map((line) => `• ${line}`)
+            .join('\n')}\n\nPlease could you send sizes and pricing?`,
+    )
+  }, [setRugCode])
 
   /** Mirrors lib/validation.ts. The server re-checks all of this regardless. */
   function validate(): Record<string, string> {

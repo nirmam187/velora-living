@@ -13,6 +13,7 @@ import {
 import { useEnquiry } from './EnquiryContext'
 import WhatsAppCta from './WhatsAppCta'
 import WhatsAppIcon from './WhatsAppIcon'
+import AddToBasket from './AddToBasket'
 import RugAr from './RugAr'
 import { hasAr } from '@/data/ar'
 import { rugMessage } from '@/lib/whatsapp'
@@ -315,6 +316,15 @@ export default function FullRange() {
                   <WhatsAppIcon size={17} />
                   Enquire on WhatsApp
                 </WhatsAppCta>
+                <AddToBasket
+                  rug={{
+                    code: current.code,
+                    name: catalogueLabel(current),
+                    href: `/rugs/${current.code.toLowerCase()}`,
+                    image: current.image,
+                    alt: current.alt,
+                  }}
+                />
                 {/* Only for rugs that actually have a texture. */}
                 {arAvailable && (
                   <button

@@ -46,24 +46,33 @@ export function rugMessage(name: string, code: string, url?: string): string {
 }
 
 /**
- * The message for an enquiry covering several rugs at once.
+ * The message for an enquiry covering several rugs at once — the enquiry list.
  *
- * One link per rug would give WhatsApp several candidates and it would preview only the
- * first, so the rugs are listed by code and name — which is what the studio actually
- * needs to quote — and the single link goes to the enquiry list itself.
+ * Each rug gets its own line with its own link. WhatsApp only unfurls the FIRST URL in
+ * a message, so exactly one preview card appears, but every line stays tappable — which
+ * is what the studio actually needs to quote a list of three rugs without asking which
+ * three. The alternative, one link to the list itself, cannot work: the list lives in
+ * the customer's own browser and there is no URL that reconstructs it.
+ *
+ * Sizes are included only where the customer chose one. An invented size would be worse
+ * than none, because the reply would quote a price for a rug nobody asked for.
  */
 export function rugListMessage(
-  items: { code: string; name: string; size?: string }[],
-  url?: string,
+  items: { code: string; name: string; sizeLabel?: string; url?: string }[],
 ): string {
-  const lines = items.map(
-    (item) => `• ${item.name} (${item.code})${item.size ? ` — ${item.size}` : ''}`,
-  )
   const opening =
     items.length === 1
       ? "Hi, I'd like a quote for this rug:"
       : `Hi, I'd like a quote for these ${items.length} rugs:`
-  return [opening, '', ...lines, ...(url ? ['', url] : [])].join('\n')
+
+  const lines = items.flatMap((item) => {
+    const size = item.sizeLabel ? ` — ${item.sizeLabel}` : ''
+    return item.url
+      ? [`${item.name} (${item.code})${size}`, item.url, '']
+      : [`${item.name} (${item.code})${size}`]
+  })
+
+  return [opening, '', ...lines].join('\n').trimEnd()
 }
 
 /** The message for a size enquiry raised from the size guide. */

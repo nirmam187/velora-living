@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import { Fraunces, Jost } from 'next/font/google'
 import Attribution from '@/components/Attribution'
+import BasketDrawer from '@/components/BasketDrawer'
+import { BasketProvider } from '@/components/BasketContext'
 import MetaPixel from '@/components/MetaPixel'
 import WhatsAppFloat from '@/components/WhatsAppFloat'
 import { site, siteUrl } from '@/lib/site'
@@ -115,9 +117,18 @@ export default function RootLayout({
         404 with a visitor who is still worth talking to.
       */}
       <body>
-        <Attribution />
-        {children}
-        <WhatsAppFloat />
+        {/*
+          The enquiry list wraps everything, because a rug can be added from the home
+          page, a rug page, a collection or a search result, and the counter has to be
+          right on all of them. The drawer is a sibling of the content rather than
+          inside it, so the dialog is not nested in <main>.
+        */}
+        <BasketProvider>
+          <Attribution />
+          {children}
+          <BasketDrawer />
+          <WhatsAppFloat />
+        </BasketProvider>
         <MetaPixel />
       </body>
     </html>
