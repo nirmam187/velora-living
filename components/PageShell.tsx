@@ -44,8 +44,8 @@ export default function PageShell({
             </div>
           </Link>
           <nav className="links" aria-label="Primary">
-            <Link href="/#collections">Collections</Link>
-            <Link href="/#full-range">Full Range</Link>
+            <Link href="/collections">Collections</Link>
+            <Link href="/rugs">Full Range</Link>
             <Link href="/#craft">Craftsmanship</Link>
             <Link href="/#enquire">Contact</Link>
           </nav>

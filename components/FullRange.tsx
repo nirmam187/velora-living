@@ -16,6 +16,7 @@ import WhatsAppIcon from './WhatsAppIcon'
 import RugAr from './RugAr'
 import { hasAr } from '@/data/ar'
 import { rugMessage } from '@/lib/whatsapp'
+import { publicUrl } from '@/lib/site'
 import { trackViewContent } from '@/lib/meta-pixel'
 import { sizeRange } from '@/data/sizes'
 
@@ -301,7 +302,11 @@ export default function FullRange() {
               <div className="rm-actions">
                 <WhatsAppCta
                   className="cta-btn wa-btn"
-                  message={rugMessage(catalogueLabel(current), current.code)}
+                  message={rugMessage(
+                    catalogueLabel(current),
+                    current.code,
+                    publicUrl(`/rugs/${current.code.toLowerCase()}`),
+                  )}
                   contentId={current.code}
                   contentName={catalogueLabel(current)}
                   contentCategory={categoryOf(current)}
@@ -330,6 +335,10 @@ export default function FullRange() {
                 >
                   Or send an enquiry form
                 </button>
+                {/* The rug's own page. See the note in RugModal. */}
+                <a href={`/rugs/${current.code.toLowerCase()}`} className="rm-link">
+                  View full details
+                </a>
                 <a href="#sizes" className="rm-link" onClick={close}>
                   See the size guide
                 </a>

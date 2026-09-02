@@ -24,3 +24,20 @@ export function siteUrl(): string {
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
   return 'http://localhost:3000'
 }
+
+/**
+ * An absolute URL for a path, safe to call in the browser.
+ *
+ * `siteUrl()` reads VERCEL_URL, which is a server-only variable — calling it in a
+ * client component returns localhost in production and silently breaks the WhatsApp
+ * preview, since WhatsApp fetches the link from its own servers and cannot reach a
+ * localhost address. So this prefers the public variable, and otherwise asks the
+ * browser where it actually is, which is right by definition.
+ */
+export function publicUrl(path: string): string {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL
+  const origin =
+    explicit?.replace(/\/$/, '') ??
+    (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${origin}${path}`
+}

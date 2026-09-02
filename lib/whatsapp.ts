@@ -26,9 +26,44 @@ export const generalMessage = "Hi, I'd like to know more about Velora Living rug
  * Naming the rug matters more than it looks: the studio sees the code in the very
  * first message, so a reply can quote real sizes and pricing without a round trip
  * asking "which one?".
+ *
+ * WHY THERE IS A LINK AND NOT A PICTURE. Click-to-chat can carry text and nothing else
+ * — `wa.me?text=` has no way to attach an image, and no amount of encoding invents one.
+ * What WhatsApp does do is unfurl the first URL in a message into a preview card with
+ * the page's og:image on it. So the rug's own page is the attachment: the studio and
+ * the customer both see the rug in the thread, and tapping it opens the full page with
+ * every photograph, the specification and the size guide.
+ *
+ * That is why this takes a URL rather than an image path. It must be absolute and
+ * publicly reachable — WhatsApp fetches it from its own servers, so a localhost or
+ * preview-protected URL renders as a bare link with no picture.
  */
-export function rugMessage(name: string, code: string): string {
-  return `Hi, I'm interested in the ${name} rug (${code}) — could you share sizes & pricing?`
+export function rugMessage(name: string, code: string, url?: string): string {
+  const opening = `Hi, I'm interested in the ${name} rug (${code}) — could you share sizes & pricing?`
+  // On its own line and last, so the preview card sits under the message rather than
+  // interrupting it, and so a client that does not unfurl still shows readable text.
+  return url ? `${opening}\n\n${url}` : opening
+}
+
+/**
+ * The message for an enquiry covering several rugs at once.
+ *
+ * One link per rug would give WhatsApp several candidates and it would preview only the
+ * first, so the rugs are listed by code and name — which is what the studio actually
+ * needs to quote — and the single link goes to the enquiry list itself.
+ */
+export function rugListMessage(
+  items: { code: string; name: string; size?: string }[],
+  url?: string,
+): string {
+  const lines = items.map(
+    (item) => `• ${item.name} (${item.code})${item.size ? ` — ${item.size}` : ''}`,
+  )
+  const opening =
+    items.length === 1
+      ? "Hi, I'd like a quote for this rug:"
+      : `Hi, I'd like a quote for these ${items.length} rugs:`
+  return [opening, '', ...lines, ...(url ? ['', url] : [])].join('\n')
 }
 
 /** The message for a size enquiry raised from the size guide. */

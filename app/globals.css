@@ -919,3 +919,109 @@ button.rm-link{
 @media (prefers-reduced-motion: reduce){
   .ar-sheet{ animation:none; }
 }
+
+/* ---------------------------------------------------------------------------
+   THE STORE PAGES
+   /rugs, /rugs/[slug], /collections and /collections/[id]. Everything here is
+   deliberately built from the same tokens and the same card and tab shapes as
+   the home page's Full Range section: a shop whose product pages look like a
+   different site is the exact impression this work exists to remove.
+   --------------------------------------------------------------------------- */
+
+.store-page{ padding:clamp(28px, 4vw, 44px) 0 clamp(56px, 8vw, 110px); min-height:64vh; }
+
+.crumbs{ margin:0 0 clamp(20px, 3vw, 30px); }
+.crumbs ol{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; list-style:none; padding:0; margin:0; }
+.crumbs li{ display:flex; align-items:center; gap:6px; font-size:0.76rem; color:var(--ink-soft); }
+.crumbs a{ color:var(--ink-soft); text-decoration:none; border-bottom:1px solid transparent; }
+.crumbs a:hover{ color:var(--ink); border-bottom-color:var(--gold); }
+.crumbs [aria-current="page"]{ color:var(--ink); }
+.crumb-sep{ color:var(--gold); }
+
+.store-head{ margin:0 0 clamp(24px, 4vw, 38px); max-width:70ch; }
+.store-head h1{ font-size:clamp(2rem, 4.4vw, 3rem); line-height:1.12; }
+.store-head p{ margin-top:12px; color:var(--ink-soft); font-size:0.98rem; }
+
+/* ---- The rug grid, shared by /rugs, /collections/[id] and "More like this". ---- */
+.rug-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-top:22px; }
+.rug-card{
+  position:relative; display:flex; flex-direction:column; text-decoration:none;
+  background:var(--cream); border:1px solid var(--line);
+  transition:border-color 0.25s ease, transform 0.25s ease;
+}
+.rug-card:hover{ border-color:var(--gold); transform:translateY(-2px); }
+.rug-card-shot{ position:relative; aspect-ratio:1/1; overflow:hidden; background:var(--cream-deep); }
+.rug-card-shot img{ object-fit:cover; }
+.rug-card-ar{
+  position:absolute; left:8px; bottom:8px;
+  font-size:0.58rem; letter-spacing:0.14em; text-transform:uppercase;
+  padding:4px 8px; border-radius:999px;
+  background:rgba(26,24,21,0.82); color:var(--cream);
+}
+.rug-card-body{ padding:12px 13px 15px; display:flex; flex-direction:column; gap:3px; }
+.rug-card-body .num{ font-size:0.62rem; letter-spacing:0.18em; color:var(--gold); }
+.rug-card-body h3{ font-size:0.98rem; line-height:1.25; }
+.rug-card-body p{ font-size:0.74rem; color:var(--ink-soft); }
+
+/* ---- A single rug. ---- */
+.rug-detail{ display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); gap:clamp(24px, 4vw, 56px); align-items:start; }
+.rug-detail-shot{ position:relative; aspect-ratio:4/5; background:var(--cream-deep); border:1px solid var(--line); }
+.rug-detail-shot img{ object-fit:cover; }
+.rug-detail-thumbs{ display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+.rug-detail-thumbs .rm-thumb{ position:relative; width:72px; height:72px; }
+
+.rug-detail-body h1{ font-size:clamp(1.7rem, 3.2vw, 2.4rem); line-height:1.14; margin:2px 0 10px; }
+.rug-detail-body .rm-desc{ color:var(--ink-soft); }
+.rug-detail-body .rm-actions{ margin-top:22px; }
+
+.rug-story{ margin-top:22px; padding-top:18px; border-top:1px solid var(--line); }
+.rug-story p{ font-size:0.92rem; color:var(--ink-soft); margin-bottom:10px; }
+
+.rug-sizes{ margin-top:22px; border-top:1px solid var(--line); padding-top:16px; }
+.rug-sizes summary{ cursor:pointer; font-size:0.86rem; color:var(--ink); }
+.rug-sizes summary:hover{ color:var(--gold); }
+.rug-sizes ul{ list-style:none; padding:0; margin:14px 0 0; display:flex; flex-direction:column; gap:11px; }
+.rug-sizes li{ display:grid; grid-template-columns:auto auto 1fr; gap:4px 10px; font-size:0.82rem; align-items:baseline; }
+.rug-sizes li strong{ font-weight:500; }
+.rug-sizes li .num{ font-size:0.72rem; color:var(--gold); letter-spacing:0.08em; }
+.rug-sizes li em{ font-style:normal; font-size:0.72rem; color:var(--gold); }
+.rug-sizes li span:last-child{ grid-column:1 / -1; color:var(--ink-soft); font-size:0.78rem; }
+.rug-sizes > p{ margin-top:14px; font-size:0.8rem; color:var(--ink-soft); }
+
+.related{ margin-top:clamp(48px, 7vw, 86px); padding-top:clamp(28px, 4vw, 40px); border-top:1px solid var(--line); }
+.related h2{ font-size:clamp(1.3rem, 2.4vw, 1.7rem); }
+.related-more{ margin-top:20px; font-size:0.86rem; }
+.related-more a{ color:var(--ink); text-decoration:none; border-bottom:1px solid var(--gold); }
+.related-more a:hover{ color:var(--gold); }
+
+/* ---- Collections index. ---- */
+.collection-cards{ display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
+.collection-card{ display:flex; flex-direction:column; text-decoration:none; border:1px solid var(--line); background:var(--cream); transition:border-color 0.25s ease; }
+.collection-card:hover{ border-color:var(--gold); }
+.collection-card-shot{ position:relative; aspect-ratio:16/10; background:var(--cream-deep); }
+.collection-card-shot img{ object-fit:cover; }
+.collection-card-body{ padding:16px 18px 20px; }
+.collection-card-body h2{ font-size:1.25rem; }
+.collection-card-body p{ font-size:0.78rem; color:var(--gold); letter-spacing:0.1em; text-transform:uppercase; margin-top:5px; }
+
+/* ---- The store footer's link columns. ---- */
+.store-foot{ display:grid; grid-template-columns:repeat(4,1fr); gap:28px; padding:clamp(34px,5vw,54px) 0 clamp(26px,4vw,36px); }
+.store-foot h3{ font-size:0.72rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:12px; }
+.store-foot ul{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px; }
+.store-foot a{ font-size:0.85rem; color:var(--ink-soft); text-decoration:none; }
+.store-foot a:hover{ color:var(--gold); }
+.store-foot-note{ font-size:0.82rem; color:var(--ink-soft); margin-bottom:10px; }
+
+@media (max-width: 1000px){
+  .rug-grid{ grid-template-columns:repeat(3,1fr); }
+  .store-foot{ grid-template-columns:repeat(2,1fr); }
+}
+@media (max-width: 860px){
+  .rug-detail{ grid-template-columns:1fr; }
+  .rug-detail-shot{ aspect-ratio:1/1; }
+}
+@media (max-width: 620px){
+  .rug-grid{ grid-template-columns:repeat(2,1fr); gap:12px; }
+  .collection-cards{ grid-template-columns:1fr; }
+  .store-foot{ grid-template-columns:1fr; gap:22px; }
+}

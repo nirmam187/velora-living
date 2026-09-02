@@ -10,6 +10,7 @@ import RugAr from './RugAr'
 import { hasAr } from '@/data/ar'
 import { collections } from '@/data/products'
 import { rugMessage } from '@/lib/whatsapp'
+import { publicUrl } from '@/lib/site'
 import { trackViewContent } from '@/lib/meta-pixel'
 import { techniqueByName } from '@/data/craft'
 import { sizeRange } from '@/data/sizes'
@@ -250,7 +251,11 @@ export default function RugModal() {
           <div className="rm-actions">
             <WhatsAppCta
               className="cta-btn wa-btn"
-              message={rugMessage(current.name, current.code)}
+              message={rugMessage(
+                current.name,
+                current.code,
+                publicUrl(`/rugs/${current.code.toLowerCase()}`),
+              )}
               contentId={current.code}
               contentName={current.name}
               contentCategory={
@@ -283,6 +288,12 @@ export default function RugModal() {
             >
               Or send an enquiry form
             </button>
+            {/* The rug's own page — every photograph, the full specification, and an
+                address that can be sent to someone. The modal is a quick look; this is
+                the product page. */}
+            <a href={`/rugs/${current.code.toLowerCase()}`} className="rm-link">
+              View full details
+            </a>
             <a
               href="#sizes"
               className="rm-link"

@@ -1,31 +1,40 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { useState } from 'react'
 import WhatsAppCta from './WhatsAppCta'
 import WhatsAppIcon from './WhatsAppIcon'
 
+/**
+ * The header for every page that is not the home page.
+ *
+ * WHY NOT <Header />. That one is built for a single long document: every link in it
+ * is a bare `#fragment`, which on /rugs/vlr-201 would scroll to nothing. The links
+ * here are absolute, so they work from anywhere on the site, and the two that now have
+ * real pages of their own — the range and the collections — point at those rather than
+ * at a section of the home page.
+ *
+ * Same markup and class names as the home page's header, deliberately. A store whose
+ * chrome shifts between the landing page and a product page reads as two sites stapled
+ * together, which is the exact impression this work exists to remove.
+ */
 const NAV_LINKS = [
-  // Collections and the Full Range are real pages now, not just sections of this one.
-  // The home page still has both as sections, but the nav points at the pages: they
-  // are the addresses that can be linked, shared and indexed.
   { href: '/collections', label: 'Collections' },
   { href: '/rugs', label: 'Full Range' },
-  { href: '#craft', label: 'Craftsmanship' },
-  { href: '#origin', label: 'Our Story' },
-  { href: '#gallery', label: 'Gallery' },
-  // Points at the enquiry form rather than the footer, so "Contact" lands on
-  // something you can actually act on.
-  { href: '#enquire', label: 'Contact' },
+  { href: '/#craft', label: 'Craftsmanship' },
+  { href: '/#origin', label: 'Our Story' },
+  { href: '/#gallery', label: 'Gallery' },
+  { href: '/#enquire', label: 'Contact' },
 ]
 
-export default function Header() {
+export default function StoreHeader() {
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
     <header>
       <div className="nav">
-        <a href="#top" className="brandmark">
+        <Link href="/" className="brandmark">
           <Image
             src="/images/brand/velora-monogram.jpg"
             alt="Velora Living monogram"
@@ -37,13 +46,13 @@ export default function Header() {
             <div className="name">Velora</div>
             <div className="sub">Living</div>
           </div>
-        </a>
+        </Link>
 
         <nav className="links" aria-label="Primary">
           {NAV_LINKS.map((link) => (
-            <a key={link.href} href={link.href}>
+            <Link key={link.href} href={link.href}>
               {link.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
@@ -56,7 +65,7 @@ export default function Header() {
             className="burger"
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
-            aria-controls="mmenu"
+            aria-controls="store-mmenu"
             onClick={() => setMenuOpen((open) => !open)}
           >
             <span />
@@ -66,11 +75,11 @@ export default function Header() {
         </div>
       </div>
 
-      <div className={menuOpen ? 'mobile-menu open' : 'mobile-menu'} id="mmenu">
+      <div className={menuOpen ? 'mobile-menu open' : 'mobile-menu'} id="store-mmenu">
         {NAV_LINKS.map((link) => (
-          <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>
+          <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>
             {link.label}
-          </a>
+          </Link>
         ))}
       </div>
     </header>
